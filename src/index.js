@@ -45,18 +45,6 @@ export class Codegen {
   }
 }
 
-export function getNodeAttrs (node) {
-  if (!node.nodeName) return node.attributes || {}
-  if (node._attributes) return node._attributes
-
-  const attrs = {}
-  Array.from(node.attributes).forEach(({name, value}) => {
-    attrs[name] = value
-  })
-  node._attributes = attrs
-  return attrs
-}
-
 export function getKey (node) {
   if (!node.nodeName) return node.attributes.key || null
   return node._attributes ? node._attributes.key : null
@@ -75,7 +63,7 @@ export function getTagName (node) {
 export function createElement (node) {
   if (node.nodeType === ELEMENT_NODE) {
     const el = document.createElement(node.tagName)
-    const attrs = getNodeAttrs(node)
+    const attrs = node.attributes
     for (const key in attrs) {
       el.setAttribute(key, attrs[key])
     }

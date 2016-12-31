@@ -13,11 +13,12 @@ import {
   mount,
 } from '../src'
 
+const normalize = s => s.split('\n')
+  .map(v => v.trim())
+  .filter(v => !!v)
+  .join('')
+
 function assertCodeIsEqual(codeA, codeB) {
-  const normalize = s => s.split('\n')
-    .map(v => v.trim())
-    .filter(v => !!v)
-    .join('')
   expect(normalize(codeA)).to.eql(normalize(codeB))
 }
 
@@ -28,9 +29,9 @@ function assertHtmlIsEqual(nodeA, nodeB) {
   )
 }
 
-function htmlToElement(html) {
+function htoe(html) {
   const wrapper = document.createElement('div')
-  wrapper.innerHTML = html.trim()
+  wrapper.innerHTML = normalize(html)
   return wrapper.firstChild
 }
 
@@ -53,23 +54,22 @@ describe('tnode', () => {
 describe('Codegen', () => {
   describe('codegenAttributes', () => {
     it('generates multiple attributes', () => {
-      const p = document.createElement('p')
-      p.setAttribute('id', 'foo')
-      p.setAttribute('class', 'class1 class2 ${class3}')
+      const p = htoe(
+        '<p id="foo" class="class1 class2 ${class3}"></p>'
+      )
       expect(Codegen.codegenAttributes(p))
         .to.eql('{id: `foo`,class: `class1 class2 ${class3}`}')
     })
   })
   describe('codegenTextNode', () => {
     it('generates tnode', () => {
-      const t = document.createTextNode('foo ${bar}')
+      const t = htoe('foo ${bar}')
       expect(Codegen.codegenTextNode(t)).to.eql('tnode(`foo ${bar}`)')
     })
   })
   describe('codegenChildren', () => {
     it('generates children', () => {
-      const el = document.createElement('div')
-      el.innerHTML = '<p></p><span></span><h1></h1>'
+      const el = htoe('<div><p></p><span></span><h1></h1></div>')
       const code = Codegen.codegenChildren(el)
       expect(code).to.eql(
         `[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])]`
@@ -78,31 +78,31 @@ describe('Codegen', () => {
   })
   describe('codegenElement', () => {
     it('generates for an element with no children and no attributes', () => {
-      const el = document.createElement('div')
+      const el = htoe('<div/>')
       expect(Codegen.codegenElementNode(el)).to.eql(`vnode('div',{},[])`)
     })
     it('generates for an element with attributes and no children', () => {
-      const el = document.createElement('div')
-      el.setAttribute('id', 'foo')
-      el.setAttribute('class', 'class1 class2 ${class3}')
+      const el = htoe(
+        '<div id="foo" class="class1 class2 ${class3}"/>'
+      )
       const code = Codegen.codegenElementNode(el)
       expect(code).to.eql(
         "vnode('div',{id: `foo`,class: `class1 class2 ${class3}`},[])"
       )
     })
     it('generates for an element with children and no attributes', () => {
-      const el = document.createElement('div')
-      el.innerHTML = '<p></p><span></span><h1></h1>'
+      const el = htoe('<div><p></p><span></span><h1></h1></div>')
       const code = Codegen.codegenElementNode(el)
       expect(code).to.eql(
         "vnode('div',{},[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])])"
       )
     })
     it('generates for an element with children and attributes', () => {
-      const el = document.createElement('div')
-      el.innerHTML = '<p></p><span></span><h1></h1>'
-      el.setAttribute('id', 'foo')
-      el.setAttribute('class', 'class1 class2 ${class3}')
+      const el = htoe(
+        `<div id="foo" class="class1 class2 \${class3}">
+          <p></p><span></span><h1></h1>
+        </div>`
+      )
       const code = Codegen.codegenElementNode(el)
       assertCodeIsEqual(
         code,
@@ -121,29 +121,11 @@ describe('Codegen', () => {
   })
 })
 
-describe('getNodeAttrs', () => {
-  it('gets a dom node\'s attributes', () => {
-    const el = document.createElement('div')
-    el.setAttribute('foo', 'one')
-    el.setAttribute('bar', 'two')
-    const attrs = getNodeAttrs(el)
-
-    expect(attrs).to.eql({foo: 'one', bar: 'two'})
-    expect(el._attributes).to.eql({foo: 'one', bar: 'two'})
-  })
-  it('gets a vnode\'s attributes', () => {
-    const node = vnode('div', {foo: 'one', bar: 'two'})
-    const attrs = getNodeAttrs(node)
-
-    expect(attrs).to.eql({foo: 'one', bar: 'two'})
-  })
-})
-
 describe('createElement', () => {
   it('creates a vnode with attributes', () => {
     assertHtmlIsEqual(
       createElement(vnode('div', {id: 'foo', class: 'bar'})),
-      htmlToElement('<div id="foo" class="bar"></div>')
+      htoe('<div id="foo" class="bar"></div>')
     )
   })
 })
@@ -154,7 +136,7 @@ describe('mount', () => {
     const [mounted, index] = mount(root)
     assertHtmlIsEqual(
       mounted.el,
-      htmlToElement('<div></div>')
+      htoe('<div></div>')
     )
     expect(index.size).to.eql(0)
   })
