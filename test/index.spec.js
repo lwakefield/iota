@@ -52,6 +52,43 @@ describe('tnode', () => {
 })
 
 describe('Codegen', () => {
+  describe('codegen', () => {
+    it('generates a simple app', () => {
+      const root = htoe(`
+        <div id="app">
+          <h1> Hello \${username} </h1>
+          <ul>
+            <li i-for="m of msgs" i-if="m.show">
+              \${m.text}
+            </li>
+          </ul>
+        </div>
+      `)
+      const app = Codegen.codegen(root)
+      expect(app).instanceOf(Function)
+
+      const rendered = app.call({
+        vnode,
+        tnode,
+        username: 'foobar',
+        msgs: [
+          {text: 'one', show: true},
+          {text: 'two', show: false},
+          {text: 'three', show: true},
+        ]
+      })
+      expect(rendered).to.eql(
+        vnode('div', {id: 'app'}, [
+          vnode('h1', {}, [tnode(' Hello foobar ')]),
+          vnode('ul', {}, [
+            vnode('li', {}, [tnode('one')]),
+            null,
+            vnode('li', {}, [tnode('three')])
+          ])
+        ])
+      )
+    })
+  })
   describe('codegenAttributes', () => {
     it('generates multiple attributes', () => {
       const p = htoe(

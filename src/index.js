@@ -27,7 +27,9 @@ export function arrToObj (arr, fn) {
 
 export class Codegen {
   static codegen (node) {
-    return `with (this) return ${Codegen.codegenNode(node)}`
+    return new Function(
+      `with (this) return ${Codegen.codegenNode(node)}`
+    )
   }
   static codegenNode (node) {
     if (node.nodeType === TEXT_NODE) {
@@ -53,10 +55,10 @@ export class Codegen {
       Array.from(node.attributes),
       ({name, value}) => ({[name]: value})
     )
-    if ('i-if' in attrs) {
+    if (attrs['i-if']) {
       code = `${attrs['i-if']} ? ${code} : null`
     }
-    if ('i-for' in attrs) {
+    if (attrs['i-for' ]) {
       const [, local, from] = attrs['i-for'].match(/(.*) of (.*)/)
       code = `...${from}.map(${local} => ${code})`
     }
@@ -123,6 +125,7 @@ export class Index {
   }
 }
 
+// TODO: I don't think we need this...
 export function mount(node) {
   const index = new Index()
 
