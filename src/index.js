@@ -5,6 +5,15 @@ export function vnode (tagName, attributes = {}, children = []) {
   return {tagName, attributes, children, nodeType: ELEMENT_NODE}
 }
 
+export function shallowCloneNode (node) {
+  if (node.nodeType === ELEMENT_NODE) {
+    return vnode(node.tagName, node.attributes)
+  } else if (node.nodeType === TEXT_NODE) {
+    return tnode(node.textContent)
+  }
+  return null
+}
+
 export function tnode (text) {
   return {textContent: text, nodeType: TEXT_NODE}
 }
@@ -200,7 +209,7 @@ export class Patcher {
         } else {
           childB.el = createElement(childB)
           replaceNode(childA.el, childB.el)
-          this.patch(childB, childB)
+          this.patch(shallowCloneNode(childB), childB)
         }
       } else if (!childA) {
         childB.el = createElement(childB)
