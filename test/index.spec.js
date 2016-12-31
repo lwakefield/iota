@@ -97,6 +97,27 @@ describe('Codegen', () => {
         "vnode('div',{},[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])])"
       )
     })
+    it('generates for an element with i-if', () => {
+      const el = htoe('<div i-if="toggle" />')
+      const code = Codegen.codegenElementNode(el)
+      expect(code).to.eql(
+        "toggle ? vnode('div',{},[]) : null"
+      )
+    })
+    it('generates for an element with i-for', () => {
+      const el = htoe('<div i-for="val of vals" />')
+      const code = Codegen.codegenElementNode(el)
+      expect(code).to.eql(
+        "...vals.map(val => vnode('div',{},[]))"
+      )
+    })
+    it('generates for an element with i-for and i-if', () => {
+      const el = htoe('<div i-for="val of vals" i-if="toggle" />')
+      const code = Codegen.codegenElementNode(el)
+      expect(code).to.eql(
+        "...vals.map(val => toggle ? vnode('div',{},[]) : null)"
+      )
+    })
     it('generates for an element with children and attributes', () => {
       const el = htoe(
         `<div id="foo" class="class1 class2 \${class3}">

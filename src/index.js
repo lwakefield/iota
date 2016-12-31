@@ -9,6 +9,13 @@ export function tnode (text) {
   return {textContent: text, nodeType: TEXT_NODE}
 }
 
+export function arrToObj (arr, fn) {
+  return arr.reduce(
+    (result, v) => Object.assign(result, fn(v)),
+    {}
+  )
+}
+
 export class Codegen {
   static codegen (node) {
     return `with (this) return ${Codegen.codegenNode(node)}`
@@ -31,10 +38,24 @@ export class Codegen {
       Codegen.codegenAttributes(node),
       Codegen.codegenChildren(node)
     ]
-    return `vnode(${params.join(',')})`
+    let code = `vnode(${params.join(',')})`
+
+    const attrs = arrToObj(
+      Array.from(node.attributes),
+      ({name, value}) => ({[name]: value})
+    )
+    if ('i-if' in attrs) {
+      code = `${attrs['i-if']} ? ${code} : null`
+    }
+    if ('i-for' in attrs) {
+      const [, local, from] = attrs['i-for'].match(/(.*) of (.*)/)
+      code = `...${from}.map(${local} => ${code})`
+    }
+    return code
   }
   static codegenAttributes (node) {
     const attrs = Array.from(node.attributes)
+      .filter(({name}) => name !== 'i-if' && name !== 'i-for')
       .map(({name, value}) => `${name}: \`${value}\``)
       .join(',')
     return `{${attrs}}`
