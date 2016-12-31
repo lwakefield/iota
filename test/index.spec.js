@@ -1,7 +1,17 @@
+/* eslint-env mocha */
 import {expect} from 'chai'
+import sinon from 'sinon'
 import jsdom from 'jsdom'
 
-import {tnode, Codegen} from '../src'
+import {
+  tnode,
+  vnode,
+  Codegen,
+  getNodeAttrs,
+  createElement,
+  Patcher,
+  mount,
+} from '../src'
 
 function assertCodeIsEqual(codeA, codeB) {
   const normalize = s => s.split('\n')
@@ -9,6 +19,19 @@ function assertCodeIsEqual(codeA, codeB) {
     .filter(v => !!v)
     .join('')
   expect(normalize(codeA)).to.eql(normalize(codeB))
+}
+
+function assertHtmlIsEqual(nodeA, nodeB) {
+  assertCodeIsEqual(
+    typeof nodeA === 'string' ? nodeA.trim() : nodeA.outerHTML,
+    typeof nodeB === 'string' ? nodeB.trim() : nodeB.outerHTML
+  )
+}
+
+function htmlToElement(html) {
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = html.trim()
+  return wrapper.firstChild
 }
 
 beforeEach(() => {
@@ -20,10 +43,10 @@ beforeEach(() => {
 
 describe('tnode', () => {
   it('instantiates correctly with no params', () => {
-    expect(tnode()).to.eql(undefined)
+    expect(tnode()).to.eql({nodeType: 3, textContent: undefined})
   })
   it('instantiates correctly with string param', () => {
-    expect(tnode('foo')).to.eql('foo')
+    expect(tnode('foo')).to.eql({nodeType: 3, textContent: 'foo'})
   })
 })
 
@@ -94,6 +117,165 @@ describe('Codegen', () => {
         )
         `
       )
+    })
+  })
+})
+
+describe('getNodeAttrs', () => {
+  it('gets a dom node\'s attributes', () => {
+    const el = document.createElement('div')
+    el.setAttribute('foo', 'one')
+    el.setAttribute('bar', 'two')
+    const attrs = getNodeAttrs(el)
+
+    expect(attrs).to.eql({foo: 'one', bar: 'two'})
+    expect(el._attributes).to.eql({foo: 'one', bar: 'two'})
+  })
+  it('gets a vnode\'s attributes', () => {
+    const node = vnode('div', {foo: 'one', bar: 'two'})
+    const attrs = getNodeAttrs(node)
+
+    expect(attrs).to.eql({foo: 'one', bar: 'two'})
+  })
+})
+
+describe('createElement', () => {
+  it('creates a vnode with attributes', () => {
+    assertHtmlIsEqual(
+      createElement(vnode('div', {id: 'foo', class: 'bar'})),
+      htmlToElement('<div id="foo" class="bar"></div>')
+    )
+  })
+})
+
+describe('mount', () => {
+  it('mounts a simple vnode', () => {
+    const root = vnode('div')
+    const [mounted, index] = mount(root)
+    assertHtmlIsEqual(
+      mounted.el,
+      htmlToElement('<div></div>')
+    )
+    expect(index.size).to.eql(0)
+  })
+  it('mounts a vnode with children', () => {
+    const root = vnode('div', {}, [vnode('div'), vnode('div'), vnode('div')])
+    const [mounted] = mount(root)
+    assertHtmlIsEqual(
+      mounted.el,
+      `
+          <div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        `
+    )
+  })
+})
+
+describe('Patcher', () => {
+  describe('patch', () => {
+    let patcher
+    let patch
+    beforeEach(() => {
+      patcher = new Patcher()
+      patcher.patchAttributes = sinon.spy()
+      patcher.patchChildren = sinon.spy()
+      patch = patcher.patch.bind(patcher)
+    })
+    it('patches an element', () => {
+      const [nodeA] = mount(vnode('div'))
+      const nodeB = vnode('div')
+      patch(nodeA, nodeB)
+      expect(nodeB.el).to.eql(nodeA.el)
+      expect(patcher.patchAttributes.calledWith(nodeA, nodeB)).to.be.true
+      expect(patcher.patchChildren.calledWith(nodeA, nodeB)).to.be.true
+    })
+    it('patches text', () => {
+      const [nodeA] = mount(tnode('foo'))
+      const nodeB = tnode('bar')
+      patch(nodeA, nodeB)
+      expect(nodeB.el).to.eql(nodeA.el)
+      expect(nodeA.el.textContent).to.eql(nodeB.textContent)
+    })
+  })
+  describe('patchAttributes', () => {
+    const patcher = new Patcher()
+    const patchAttributes = patcher.patchAttributes
+    it('adds attributes', () => {
+      const [nodeA] = mount(vnode('div'))
+      const nodeB = vnode('div', {id: 'foo'})
+      patchAttributes(nodeA, nodeB)
+
+      assertHtmlIsEqual(nodeA.el, '<div id="foo"></div>')
+      expect(nodeA.attributes).to.eql(nodeB.attributes)
+    })
+    it('updates attributes', () => {
+      const [nodeA] = mount(vnode('div', {id: 'foo'}))
+      const nodeB = vnode('div', {id: 'bar'})
+      patchAttributes(nodeA, nodeB)
+
+      assertHtmlIsEqual(nodeA.el, '<div id="bar"></div>')
+      expect(nodeA.attributes).to.eql(nodeB.attributes)
+    })
+    it('deletes attributes', () => {
+      const [nodeA] = mount(vnode('div', {id: 'foo'}))
+      const nodeB = vnode('div', {})
+      patchAttributes(nodeA, nodeB)
+
+      assertHtmlIsEqual(nodeA.el, '<div></div>')
+      expect(nodeA.attributes).to.eql(nodeB.attributes)
+    })
+  })
+  describe('patchChildren', () => {
+    let patchChildren
+    let patcher
+    beforeEach(() => {
+      patcher = new Patcher()
+      patcher.patch = sinon.spy()
+      patchChildren = patcher.patchChildren.bind(patcher)
+    })
+
+    it('adds children', () => {
+      const [nodeA] = mount(vnode('div'))
+      const nodeB = vnode('div', {}, [vnode('div')])
+      patchChildren(nodeA, nodeB)
+      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      expect(nodeB.children[0].el).to.be.ok
+    })
+    it('removes children', () => {
+      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
+      const nodeB = vnode('div')
+      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      patchChildren(nodeA, nodeB)
+      assertHtmlIsEqual(nodeA.el, '<div></div>')
+    })
+    it('replace children with non-matching tagNames', () => {
+      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
+      const nodeB = vnode('div', {}, [vnode('p')])
+      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      patchChildren(nodeA, nodeB)
+      assertHtmlIsEqual(nodeA.el, '<div><p></p></div>')
+      expect(nodeB.children[0].el).to.be.ok
+    })
+    it('replace children element node with text node', () => {
+      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
+      const nodeB = vnode('div', {}, [tnode('hello')])
+      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      patchChildren(nodeA, nodeB)
+      assertHtmlIsEqual(nodeA.el, '<div>hello</div>')
+      expect(nodeB.children[0].el).to.be.ok
+    })
+    it('patches type matching children', () => {
+      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
+      const nodeB = vnode('div', {}, [vnode('div', {id: 'foo'})])
+      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      patchChildren(nodeA, nodeB)
+      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      expect(
+        patcher.patch.calledWith(nodeA.children[0], nodeB.children[0])
+      ).to.be.true
     })
   })
 })
