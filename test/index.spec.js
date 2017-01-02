@@ -35,20 +35,6 @@ function htoe(html) {
   return wrapper.firstChild
 }
 
-const mountedDiv = (attributes = {}) => {
-  const div = vnode('div', attributes)
-  div.el = document.createElement('div')
-  Object.keys(attributes).forEach(k => {
-    div.el.setAttribute(k, attributes[k])
-  })
-  return div
-}
-const mountedText = (text) => {
-  const t = tnode(text)
-  t.el = document.createTextNode(text)
-  return t
-}
-
 beforeEach(() => {
   const window = jsdom.jsdom().defaultView
   const document = window.document
