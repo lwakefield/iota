@@ -8,7 +8,6 @@ import {
 
 const ELEMENT_NODE = 1
 const TEXT_NODE = 3
-const COMPONENT_NODE = 99
 const components = {}
 
 export function app(el, options = {}) {
@@ -23,7 +22,8 @@ export function registerComponent(component) {
 }
 
 export class Component {
-  constructor ({data = {}}) {
+  constructor (options = {}) {
+    const {data = {}} = options
     this.$data = observe(data, this.update.bind(this))
     this.$el = null
     this._patcher = null
@@ -43,7 +43,7 @@ export class Component {
   }
   update () {
     const rendered = this.render.call(
-      Object.assign({vnode, tnode}, this.$data)
+      Object.assign({vnode, tnode}, this.$data, this)
     )
     this._patcher.patch(rendered)
   }
@@ -89,11 +89,21 @@ export class Codegen {
     return code
   }
   static codegenAttributes (node) {
-    const attrs = Array.from(node.attributes)
-      .filter(({name}) => name !== 'i-if' && name !== 'i-for')
-      .map(({name, value}) => `${name}: \`${value}\``)
+    const props = Array.from(node.attributes)
+      .filter(({name}) => name.match(/^:/))
+      .map(({name, value}) => `${name.replace(':', '')}: ${value}`)
       .join(',')
-    return `{${attrs}}`
+    const attrs = Array.from(node.attributes)
+      .filter(({name}) =>
+        name !== 'i-if' &&
+        name !== 'i-for' &&
+        !name.match(/^:/)
+      )
+      .map(({name, value}) => `${name}: \`${value}\``)
+    if (props.length) {
+      attrs.push(`props: {${props}}`)
+    }
+    return `{${attrs.join(',')}}`
   }
   static codegenChildren (node) {
     const children = Array.from(node.childNodes).map(Codegen.codegenNode)
@@ -119,7 +129,19 @@ export class Patcher {
     }
     nodeB.el = nodeB.el || nodeA.el
 
-    if (nodeA.nodeType === TEXT_NODE) {
+    const isComponent = node => (
+      node.nodeType === ELEMENT_NODE &&
+      !!components[node.tagName]
+    )
+    const getComponent = node => components[node.tagName]
+
+    if (isComponent(nodeB)) {
+      if (!nodeB.component) {
+        nodeB.component = new (getComponent(nodeB))
+        nodeB.component.mount(nodeA.el)
+      }
+      nodeB.component.update()
+    } else if (nodeA.nodeType === TEXT_NODE) {
       nodeA.el.textContent = nodeB.textContent
     } else if (nodeA.nodeType === ELEMENT_NODE) {
       this.patchAttributes(nodeA, nodeB)

@@ -4,6 +4,7 @@ import sinon from 'sinon'
 import jsdom from 'jsdom'
 
 import {
+  Component,
   tnode,
   vnode,
   Codegen,
@@ -12,6 +13,8 @@ import {
   Patcher,
   domToVdom,
   Index,
+  components,
+  registerComponent,
 } from '../src'
 
 const normalize = s => s.split('\n')
@@ -52,7 +55,7 @@ describe('tnode', () => {
   })
 })
 
-describe('Codegen', () => {
+describe.only('Codegen', () => {
   describe('codegen', () => {
     it('generates a simple app', () => {
       const root = htoe(`
@@ -97,6 +100,13 @@ describe('Codegen', () => {
       )
       expect(Codegen.codegenAttributes(p))
         .to.eql('{id: `foo`,class: `class1 class2 ${class3}`}')
+    })
+    it('generates props', () => {
+      const p = htoe(
+        '<p :foo="foobar"></p>'
+      )
+      expect(Codegen.codegenAttributes(p))
+        .to.eql('{props: {foo: foobar}}')
     })
   })
   describe('codegenTextNode', () => {
@@ -219,6 +229,24 @@ describe('Patcher', () => {
       expect(nodeB.el).to.eql(nodeA.el)
       expect(nodeA.el.textContent).to.eql(nodeB.textContent)
       expect(patcher.lastNodeA).to.eql(nodeB)
+    })
+    it('patches a component', () => {
+      const spy = sinon.spy()
+      class Foo extends Component {
+        update () {
+          spy(...arguments)
+        }
+      }
+      registerComponent(Foo)
+
+      const nodeA = domToVdom(htoe('<div />'))
+      const nodeB = vnode('Foo')
+      const patcher = new Patcher(nodeA)
+
+      patcher.patch(nodeB)
+      expect(nodeB.component).to.be.ok
+      expect(nodeB.component.$el).to.eql(nodeA.el)
+      expect(spy.calledOnce).to.be.true
     })
   })
   describe('patchAttributes', () => {
