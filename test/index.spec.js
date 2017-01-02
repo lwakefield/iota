@@ -10,7 +10,7 @@ import {
   getNodeAttrs,
   createElement,
   Patcher,
-  mount,
+  domToVdom,
 } from '../src'
 
 const normalize = s => s.split('\n')
@@ -33,6 +33,20 @@ function htoe(html) {
   const wrapper = document.createElement('div')
   wrapper.innerHTML = normalize(html)
   return wrapper.firstChild
+}
+
+const mountedDiv = (attributes = {}) => {
+  const div = vnode('div', attributes)
+  div.el = document.createElement('div')
+  Object.keys(attributes).forEach(k => {
+    div.el.setAttribute(k, attributes[k])
+  })
+  return div
+}
+const mountedText = (text) => {
+  const t = tnode(text)
+  t.el = document.createTextNode(text)
+  return t
 }
 
 beforeEach(() => {
@@ -188,63 +202,43 @@ describe('createElement', () => {
   })
 })
 
-describe('mount', () => {
-  it('mounts a simple vnode', () => {
-    const root = vnode('div')
-    const [mounted, index] = mount(root)
-    assertHtmlIsEqual(
-      mounted.el,
-      htoe('<div></div>')
-    )
-    expect(index.size).to.eql(0)
-  })
-  it('mounts a vnode with children', () => {
-    const root = vnode('div', {}, [vnode('div'), vnode('div'), vnode('div')])
-    const [mounted] = mount(root)
-    assertHtmlIsEqual(
-      mounted.el,
-      `
-          <div>
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-        `
-    )
-  })
-})
-
 describe('Patcher', () => {
   describe('patch', () => {
-    let patcher
-    let patch
+    let _patchAttributes = Patcher.prototype.patchAttributes
+    let _patchChildren = Patcher.prototype.patchChildren
     beforeEach(() => {
-      patcher = new Patcher()
-      patcher.patchAttributes = sinon.spy()
-      patcher.patchChildren = sinon.spy()
-      patch = patcher.patch.bind(patcher)
+      Patcher.prototype.patchAttributes = sinon.spy()
+      Patcher.prototype.patchChildren = sinon.spy()
+    })
+    after(() => {
+      Patcher.prototype.patchAttributes = _patchAttributes
+      Patcher.prototype.patchChildren = _patchChildren
     })
     it('patches an element', () => {
-      const [nodeA] = mount(vnode('div'))
+      const nodeA = domToVdom(htoe('<div />'))
       const nodeB = vnode('div')
-      patch(nodeA, nodeB)
+      const patcher = new Patcher(nodeA)
+      patcher.patch(nodeB)
       expect(nodeB.el).to.eql(nodeA.el)
       expect(patcher.patchAttributes.calledWith(nodeA, nodeB)).to.be.true
       expect(patcher.patchChildren.calledWith(nodeA, nodeB)).to.be.true
+      expect(patcher.lastNodeA).to.eql(nodeB)
     })
     it('patches text', () => {
-      const [nodeA] = mount(tnode('foo'))
+      const nodeA = domToVdom(htoe('foo'))
       const nodeB = tnode('bar')
-      patch(nodeA, nodeB)
+      const patcher = new Patcher(nodeA)
+      patcher.patch(nodeB)
       expect(nodeB.el).to.eql(nodeA.el)
       expect(nodeA.el.textContent).to.eql(nodeB.textContent)
+      expect(patcher.lastNodeA).to.eql(nodeB)
     })
   })
   describe('patchAttributes', () => {
     const patcher = new Patcher()
     const patchAttributes = patcher.patchAttributes
     it('adds attributes', () => {
-      const [nodeA] = mount(vnode('div'))
+      const nodeA = domToVdom(htoe('<div />'))
       const nodeB = vnode('div', {id: 'foo'})
       patchAttributes(nodeA, nodeB)
 
@@ -252,7 +246,7 @@ describe('Patcher', () => {
       expect(nodeA.attributes).to.eql(nodeB.attributes)
     })
     it('updates attributes', () => {
-      const [nodeA] = mount(vnode('div', {id: 'foo'}))
+      const nodeA = domToVdom(htoe('<div id="foo" />'))
       const nodeB = vnode('div', {id: 'bar'})
       patchAttributes(nodeA, nodeB)
 
@@ -260,7 +254,7 @@ describe('Patcher', () => {
       expect(nodeA.attributes).to.eql(nodeB.attributes)
     })
     it('deletes attributes', () => {
-      const [nodeA] = mount(vnode('div', {id: 'foo'}))
+      const nodeA = domToVdom(htoe('<div id="foo" />'))
       const nodeB = vnode('div', {})
       patchAttributes(nodeA, nodeB)
 
@@ -269,49 +263,72 @@ describe('Patcher', () => {
     })
   })
   describe('patchChildren', () => {
-    let patchChildren
-    let patcher
     beforeEach(() => {
-      patcher = new Patcher()
-      patcher.patch = sinon.spy()
-      patchChildren = patcher.patchChildren.bind(patcher)
+      Patcher.prototype._patch = Patcher.prototype.patch
+      Patcher.prototype.patch = sinon.spy()
+    })
+    after(() => {
+      Patcher.prototype.patch = Patcher.prototype._patch
+      Patcher.prototype._patch = undefined
     })
 
+    function setup (htmlForNodeA, nodeB) {
+      const nodeA = domToVdom(htoe(htmlForNodeA))
+      const patcher = new Patcher()
+      return [nodeA, nodeB, patcher]
+    }
+
     it('adds children', () => {
-      const [nodeA] = mount(vnode('div'))
-      const nodeB = vnode('div', {}, [vnode('div')])
-      patchChildren(nodeA, nodeB)
+      const [nodeA, nodeB, patcher] = setup(
+        '<div />',
+        vnode('div', {}, [vnode('div')])
+      )
+
+      assertHtmlIsEqual(nodeA.el, '<div></div>')
+      patcher.patchChildren(nodeA, nodeB)
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
       expect(nodeB.children[0].el).to.be.ok
     })
     it('removes children', () => {
-      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
-      const nodeB = vnode('div')
+      const [nodeA, nodeB, patcher] = setup(
+        '<div><div /></div>',
+        vnode('div')
+      )
+
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patchChildren(nodeA, nodeB)
+      patcher.patchChildren(nodeA, nodeB)
       assertHtmlIsEqual(nodeA.el, '<div></div>')
     })
     it('replace children with non-matching tagNames', () => {
-      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
-      const nodeB = vnode('div', {}, [vnode('p')])
+      const [nodeA, nodeB, patcher] = setup(
+        '<div><div /></div>',
+        vnode('div', {}, [vnode('p')])
+      )
+
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patchChildren(nodeA, nodeB)
+      patcher.patchChildren(nodeA, nodeB)
       assertHtmlIsEqual(nodeA.el, '<div><p></p></div>')
       expect(nodeB.children[0].el).to.be.ok
     })
     it('replace children element node with text node', () => {
-      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
-      const nodeB = vnode('div', {}, [tnode('hello')])
+      const [nodeA, nodeB, patcher] = setup(
+        '<div><div /></div>',
+        vnode('div', {}, [tnode('hello')])
+      )
+
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patchChildren(nodeA, nodeB)
+      patcher.patchChildren(nodeA, nodeB)
       assertHtmlIsEqual(nodeA.el, '<div>hello</div>')
       expect(nodeB.children[0].el).to.be.ok
     })
     it('patches type matching children', () => {
-      const [nodeA] = mount(vnode('div', {}, [vnode('div')]))
-      const nodeB = vnode('div', {}, [vnode('div', {id: 'foo'})])
+      const [nodeA, nodeB, patcher] = setup(
+        '<div><div /></div>',
+        vnode('div', {}, [vnode('div', {id: 'foo'})])
+      )
+
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patchChildren(nodeA, nodeB)
+      patcher.patchChildren(nodeA, nodeB)
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
       expect(
         patcher.patch.calledWith(nodeA.children[0], nodeB.children[0])
