@@ -6,10 +6,11 @@ export function vnode (tagName, attributes = {}, children = []) {
 }
 
 export function shallowCloneNode (node) {
+  const {tagName, attributes, el, textContent, nodeType} = node
   if (node.nodeType === ELEMENT_NODE) {
-    return vnode(node.tagName, node.attributes)
+    return Object.assign({}, {tagName, attributes, el, nodeType, children: []})
   } else if (node.nodeType === TEXT_NODE) {
-    return tnode(node.textContent)
+    return Object.assign({}, {textContent, nodeType, el})
   }
   return null
 }
@@ -72,7 +73,7 @@ export class Codegen {
     return `{${attrs}}`
   }
   static codegenChildren (node) {
-    const children =  Array.from(node.childNodes).map(Codegen.codegenNode)
+    const children = Array.from(node.childNodes).map(Codegen.codegenNode)
     return `[${children.join(',')}]`
   }
 }
@@ -149,14 +150,96 @@ export function mount(node) {
   return [_mount(node), index]
 }
 
+export function domToVdom (node) {
+  if (node.nodeType === ELEMENT_NODE) {
+    const tagName = node.tagName.toLowerCase()
+    const attrs = arrToObj(
+      Array.from(node.attributes),
+      ({name, value}) => ({[name]: value})
+    )
+    const children = Array.from(node.childNodes).map(domToVdom)
+    const n = vnode(tagName, attrs, children)
+    n.el = node
+    return n
+  } else if (node.nodeType === TEXT_NODE) {
+    const n = tnode(node.textContent)
+    n.el = node
+    return n
+  }
+
+  return null
+}
+
+export function observe (obj, fn) {
+  return new Proxy(obj, {
+    set (target, property, val) {
+      target[property] = val instanceof Array || val instanceof Object
+        ? observe(val, fn)
+        : val
+      fn()
+      return true
+    }
+  })
+}
+
+export function proxy (ontoObj, val) {
+  if (!val) return
+
+  for (let key of Object.keys(val)) {
+    Object.defineProperty(ontoObj, key, {
+      enumerable: true,
+      configurable: true,
+      get () {
+        return val[key]
+      },
+      set (newVal) {
+        val[key] = newVal
+      },
+    })
+  }
+}
+
+export class Component {
+  constructor () {
+    this.$data = observe({}, this.update.bind(this))
+    this.$el = null
+    this.props = {}
+  }
+  mount (el) {
+    this.$el = el
+    this.patcher = new Patcher(domToVdom(el))
+  }
+  render () {
+    throw new Error('Not implemented')
+  }
+  update () {
+    const rendered = this.render.call(
+      Object.assign({vnode, tnode}, this.$data)
+    )
+    this.patcher.patch(rendered)
+  }
+}
+
+export function app(el) {
+  const component = new Component()
+  component.render = Codegen.codegen(el)
+  component.mount(el)
+
+  return component
+}
 
 export class Patcher {
   // Patches nodeB onto nodeA
-  constructor (nodeA, nodeB) {
-    this.startNodeA = nodeA
-    this.startNodeB = nodeB
+  constructor (nodeA) {
+    this.lastNodeA = nodeA
   }
-  patch(nodeA = this.startNodeA, nodeB = this.startNodeB) {
+  patch(nodeA, nodeB) {
+    if (arguments.length === 1) {
+      this.patch(this.lastNodeA, nodeA)
+      this.lastNodeA = nodeA
+      return
+    }
+
     // We expect nodeA and nodeB to be of the same type
     if (nodeA.nodeType !== nodeB.nodeType) {
       throw new Error('expected nodes to have the same type')
@@ -217,7 +300,7 @@ export class Patcher {
       } else if (!childA) {
         childB.el = createElement(childB)
         nodeA.el.appendChild(childB.el)
-        this.patch(childB, childB)
+        this.patch(shallowCloneNode(childB), childB)
       } else if (!childB) {
         nodeA.el.removeChild(childA.el)
       }

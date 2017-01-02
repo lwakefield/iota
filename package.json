@@ -10,16 +10,19 @@
     "babel-register": "^6.18.0"
   },
   "devDependencies": {
+    "babel-loader": "^6.2.10",
     "babel-preset-es2015": "^6.18.0",
     "babel-register": "^6.18.0",
     "chai": "^3.5.0",
     "eslint": "^3.12.2",
     "jsdom": "^9.9.1",
     "mocha": "^3.2.0",
-    "sinon": "^1.17.7"
+    "sinon": "^1.17.7",
+    "webpack": "^2.2.0-rc.3"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-lib": "webpack src/index.js dist/vdoom.js --module-bind 'js=babel-loader' --output-library Vdoom"
   },
   "author": "Lawrence Wakefield <lawrence@iamlawrence.me> (https://iamlawrence.me/)",
   "license": "ISC"
