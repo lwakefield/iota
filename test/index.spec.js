@@ -11,6 +11,7 @@ import {
   createElement,
   Patcher,
   domToVdom,
+  Index,
 } from '../src'
 
 const normalize = s => s.split('\n')
@@ -314,11 +315,100 @@ describe('Patcher', () => {
       )
 
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+      const firstChildA = nodeA.children[0]
       patcher.patchChildren(nodeA, nodeB)
       assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
       expect(
-        patcher.patch.calledWith(nodeA.children[0], nodeB.children[0])
+        patcher.patch.calledWith(firstChildA, nodeB.children[0])
       ).to.be.true
+    })
+    describe('patching keyed nodes', () => {
+      it('patches keyed nodes for the first time', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div></div>',
+          vnode('div', {}, [
+            vnode('div', {key: 1}),
+            vnode('div', {key: 2}),
+            vnode('div', {key: 3}),
+          ])
+        )
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(
+          nodeA.el,
+          '<div><div key="1"></div><div key="2"></div><div key="3"></div></div>'
+        )
+      })
+      it('patches keyed nodes with no changes', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          `<div>
+            <div key="1"></div>
+            <div key="2"></div>
+            <div key="3"></div>
+          </div>`,
+          vnode('div', {}, [
+            vnode('div', {key: 1}),
+            vnode('div', {key: 2}),
+            vnode('div', {key: 3}),
+          ])
+        )
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(
+          nodeA.el,
+          '<div><div key="1"></div><div key="2"></div><div key="3"></div></div>'
+        )
+        expect(nodeA.children[0].el).to.eql(nodeB.children[0].el)
+        expect(nodeA.children[1].el).to.eql(nodeB.children[1].el)
+        expect(nodeA.children[2].el).to.eql(nodeB.children[2].el)
+      })
+      it('patches keyed nodes with shuffle', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          `<div>
+            <div key="1"></div>
+            <div key="2"></div>
+            <div key="3"></div>
+          </div>`,
+          vnode('div', {}, [
+            vnode('div', {key: 2}),
+            vnode('div', {key: 3}),
+            vnode('div', {key: 1}),
+          ])
+        )
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(
+          nodeA.el,
+          '<div><div key="2"></div><div key="3"></div><div key="1"></div></div>'
+        )
+        expect(nodeA.children[0].el).to.eql(nodeB.children[0].el)
+        expect(nodeA.children[1].el).to.eql(nodeB.children[1].el)
+        expect(nodeA.children[2].el).to.eql(nodeB.children[2].el)
+      })
+      it('patches keyed nodes with non-keyed insertion', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          `<div>
+            <div key="1"></div>
+            <div key="2"></div>
+            <div key="3"></div>
+          </div>`,
+          vnode('div', {}, [
+            vnode('p'),
+            vnode('div', {key: 1}),
+            vnode('div', {key: 2}),
+            vnode('div', {key: 3}),
+          ])
+        )
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <p></p>
+            <div key="1"></div>
+            <div key="2"></div>
+            <div key="3"></div>
+          </div>
+          `
+        )
+      })
     })
   })
 })

@@ -1,7 +1,15 @@
-import {observe, proxy, arrToObj} from './util'
+import {
+  observe,
+  proxy,
+  arrToObj,
+  swap,
+  max,
+} from './util'
 
 const ELEMENT_NODE = 1
 const TEXT_NODE = 3
+const COMPONENT_NODE = 99
+const components = {}
 
 export function app(el, options = {}) {
   const component = new Component(options)
@@ -10,17 +18,25 @@ export function app(el, options = {}) {
   return component
 }
 
+export function registerComponent(component) {
+  components[component.name] = component
+}
+
 export class Component {
   constructor ({data = {}}) {
     this.$data = observe(data, this.update.bind(this))
     this.$el = null
-    this.props = {}
+    this._patcher = null
+    this.$props = {}
 
     proxy(this, this.$data)
   }
   mount (el) {
     this.$el = el
-    this.patcher = new Patcher(domToVdom(el))
+    this._patcher = new Patcher(domToVdom(el))
+  }
+  setProps(props) {
+    this.$props = props
   }
   render () {
     throw new Error('Not implemented')
@@ -29,7 +45,7 @@ export class Component {
     const rendered = this.render.call(
       Object.assign({vnode, tnode}, this.$data)
     )
-    this.patcher.patch(rendered)
+    this._patcher.patch(rendered)
   }
 }
 
@@ -135,19 +151,61 @@ export class Patcher {
       return nodeA.nodeType === nodeB.nodeType &&
         getTagName(nodeA) === getTagName(nodeB)
     }
-
-    const max = (a,b) => a > b ? a : b
     // replace a with b
-    const replaceNode = (a, b) => a.parentNode
+    const replaceNode = (a, b) => a !== b && a.parentNode
       && a.parentNode.replaceChild(b, a)
+    // insserts b after a
+    const insertAfter = (a, b) => a.parentNode
+      && a.parentNode.insertBefore(b, a.nextSibling)
     const len = max(childrenA.length, childrenB.length)
+    const getFullKey = node => {
+      return node && node.attributes && node.attributes.key ?
+        `${getTagName(node)}.${node.attributes.key}` :
+        null
+    }
+
+    const indexed = new Index()
+    for (let i = 0; i < childrenA.length; i++) {
+      const child = childrenA[i]
+      const key = child.component ?
+        child.component.constructor.name :
+        getFullKey(child)
+      if (key) {
+        indexed.queue(key, child)
+      }
+    }
+
+    function reconcile (childA, childB) {
+      const [keyA, keyB] = [getFullKey(childA), getFullKey(childB)]
+      const keyedChildA = indexed.dequeue(keyB)
+      if (keyedChildA) {
+        swap(childrenA, childA, keyedChildA)
+        childA && replaceNode(childA.el, keyedChildA.el)
+        return keyedChildA
+      } else if (keyA && childB) {
+        // We might want to use childA at a later point in time...
+        childB.el = createElement(childB)
+        replaceNode(childA.el, childB.el)
+        return childB
+      }
+      return childA
+    }
 
     for (let i = 0; i < len; i++) {
-      const childA = childrenA[i]
+      let childA = childrenA[i]
       const childB = childrenB[i]
+
+      childA = reconcile(childA, childB)
+
+      if (i > 0 && childA && childA.el && !childA.el.parentNode) {
+        // This happens when we remove a keyed node earlier in the loop
+        // ie. case 2 in reconcile
+        insertAfter(childrenA[i - 1].el, childA.el)
+      }
 
       if (childA && childB) {
         if (nodeTypesMatch(childA, childB)) {
+          childB.el = childB.el || childA.el
           this.patch(childA, childB)
         } else {
           childB.el = createElement(childB)
@@ -161,6 +219,8 @@ export class Patcher {
       } else if (!childB) {
         nodeA.el.removeChild(childA.el)
       }
+
+      childrenA[i] = childB
     }
   }
 }
@@ -190,11 +250,7 @@ export function getKey (node) {
 
 export function getTagName (node) {
   return node.tagName
-    ? (
-      node.nodeName && node._component ?
-      node._component.constructor.name :
-      node.tagName
-    ).toLowerCase()
+    ? node.tagName.toLowerCase()
     : null
 }
 
@@ -223,6 +279,9 @@ export class Index {
     }
     this.index[key].push(val)
     this.size++
+  }
+  peek (key) {
+    return this.index[key]
   }
   dequeue (key) {
     if (!(key in this.index)) return null
