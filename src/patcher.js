@@ -15,9 +15,16 @@ const replaceNode = (a, b) => a !== b && a.parentNode
 const insertAfter = (a, b) => a.parentNode
   && a.parentNode.insertBefore(b, a.nextSibling)
 const getFullKey = node => {
+  if (node && isComponent(node)) {
+    return node.tagName
+  }
   return node && node.attributes && node.attributes.key ?
     `${getTagName(node)}.${node.attributes.key}` :
     null
+}
+const nodeTypesMatch = (nodeA, nodeB) => {
+  return nodeA.nodeType === nodeB.nodeType &&
+    getTagName(nodeA) === getTagName(nodeB)
 }
 
 export default class Patcher {
@@ -41,7 +48,14 @@ export default class Patcher {
     if (isComponent(nodeB)) {
       nodeB.component = nodeA.component || new (getComponent(nodeB))
       const component = nodeB.component
-      !component.$el && component.mount(nodeA.el)
+      if (!component.$el) {
+        // first mount...
+        const rendered = component.render()
+        const el = createElement(rendered)
+        replaceNode(nodeA.el, el)
+        nodeB.el = el
+        component.mount(el)
+      }
 
       component.setProps(nodeB.attributes.props || {})
       component.update()
@@ -73,10 +87,6 @@ export default class Patcher {
     const childrenA = nodeA.children
     const childrenB = nodeB.children
 
-    const nodeTypesMatch = (nodeA, nodeB) => {
-      return nodeA.nodeType === nodeB.nodeType &&
-        getTagName(nodeA) === getTagName(nodeB)
-    }
     const len = max(childrenA.length, childrenB.length)
 
     const indexed = new Index()
@@ -153,7 +163,7 @@ export class Index {
     this.size++
   }
   peek (key) {
-    return this.index[key]
+    return (this.index[key] || [])[0] || null
   }
   dequeue (key) {
     if (!(key in this.index)) return null

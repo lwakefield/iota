@@ -35,6 +35,7 @@ export function arrToObj (arr, fn) {
 }
 
 export const swap = (arr, a, b) => {
+  if (!a || !b) return
   const [aIndex, bIndex] = [arr.indexOf(a), arr.indexOf(b)]
   arr.splice(aIndex, 1, b)
   arr.splice(bIndex, 1, a)

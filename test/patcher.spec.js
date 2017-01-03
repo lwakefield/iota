@@ -3,8 +3,12 @@ import {expect} from 'chai'
 import sinon from 'sinon'
 import jsdom from 'jsdom'
 
-import {Component, registerComponent} from '../src/component'
-import Patcher from '../src/patcher'
+import {
+  Component,
+  registerComponent,
+  unregisterComponent,
+} from '../src/component'
+import Patcher, {Index} from '../src/patcher'
 import {vnode, tnode} from '../src/vdom'
 import {htov, assertHtmlIsEqual, mockOnClass, unmockOnClass} from './util'
 
@@ -14,6 +18,14 @@ beforeEach(() => {
   global['window'] = window
   global['document'] = document
 })
+
+class Foo extends Component {
+  render () {
+    return vnode('div', {id: 'foo'})
+  }
+}
+before(() => {registerComponent(Foo)})
+after(() => {unregisterComponent('Foo')})
 
 describe('Patcher', () => {
   describe('patch', () => {
@@ -45,9 +57,6 @@ describe('Patcher', () => {
       expect(patcher.lastNodeA).to.eql(nodeB)
     })
     describe('patches a component', () => {
-      class Foo extends Component {}
-      registerComponent(Foo)
-
       beforeEach(() => {
         mockOnClass(Foo, 'update', sinon.spy())
         mockOnClass(Foo, 'setProps', sinon.spy())
@@ -64,7 +73,8 @@ describe('Patcher', () => {
 
         patcher.patch(nodeB)
         expect(nodeB.component).to.be.ok
-        expect(nodeB.component.$el).to.eql(nodeA.el)
+        // TODO: will replace the node on first patch
+        // expect(nodeB.component.$el).to.eql(nodeA.el)
         expect(nodeB.component.update.calledOnce).to.be.true
         expect(nodeB.component.setProps.calledWith({foo: 'foobar'})).to.be.true
       })
@@ -99,77 +109,140 @@ describe('Patcher', () => {
     })
   })
   describe('patchChildren', () => {
-    beforeEach(() => {
-      mockOnClass(Patcher, 'patch', sinon.spy())
-    })
-    afterEach(() => {
-      unmockOnClass(Patcher, 'patch', sinon.spy())
-    })
-
     function setup (htmlForNodeA, nodeB) {
       const nodeA = htov(htmlForNodeA)
       const patcher = new Patcher()
       return [nodeA, nodeB, patcher]
     }
 
-    it('adds children', () => {
-      const [nodeA, nodeB, patcher] = setup(
-        '<div />',
-        vnode('div', {}, [vnode('div')])
-      )
+    describe('simple functionality', () => {
+      beforeEach(() => {
+        mockOnClass(Patcher, 'patch', sinon.spy())
+      })
+      afterEach(() => {
+        unmockOnClass(Patcher, 'patch', sinon.spy())
+      })
+      it('adds children', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div />',
+          vnode('div', {}, [vnode('div')])
+        )
 
-      assertHtmlIsEqual(nodeA.el, '<div></div>')
-      patcher.patchChildren(nodeA, nodeB)
-      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      expect(nodeB.children[0].el).to.be.ok
-    })
-    it('removes children', () => {
-      const [nodeA, nodeB, patcher] = setup(
-        '<div><div /></div>',
-        vnode('div')
-      )
+        assertHtmlIsEqual(nodeA.el, '<div></div>')
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+        expect(nodeB.children[0].el).to.be.ok
+      })
+      it('removes children', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div><div /></div>',
+          vnode('div')
+        )
 
-      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patcher.patchChildren(nodeA, nodeB)
-      assertHtmlIsEqual(nodeA.el, '<div></div>')
-    })
-    it('replace children with non-matching tagNames', () => {
-      const [nodeA, nodeB, patcher] = setup(
-        '<div><div /></div>',
-        vnode('div', {}, [vnode('p')])
-      )
+        assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(nodeA.el, '<div></div>')
+      })
+      it('replace children with non-matching tagNames', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div><div /></div>',
+          vnode('div', {}, [vnode('p')])
+        )
 
-      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patcher.patchChildren(nodeA, nodeB)
-      assertHtmlIsEqual(nodeA.el, '<div><p></p></div>')
-      expect(nodeB.children[0].el).to.be.ok
-    })
-    it('replace children element node with text node', () => {
-      const [nodeA, nodeB, patcher] = setup(
-        '<div><div /></div>',
-        vnode('div', {}, [tnode('hello')])
-      )
+        assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(nodeA.el, '<div><p></p></div>')
+        expect(nodeB.children[0].el).to.be.ok
+      })
+      it('replace children element node with text node', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div><div /></div>',
+          vnode('div', {}, [tnode('hello')])
+        )
 
-      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      patcher.patchChildren(nodeA, nodeB)
-      assertHtmlIsEqual(nodeA.el, '<div>hello</div>')
-      expect(nodeB.children[0].el).to.be.ok
-    })
-    it('patches type matching children', () => {
-      const [nodeA, nodeB, patcher] = setup(
-        '<div><div /></div>',
-        vnode('div', {}, [vnode('div', {id: 'foo'})])
-      )
+        assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(nodeA.el, '<div>hello</div>')
+        expect(nodeB.children[0].el).to.be.ok
+      })
+      it('patches type matching children', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div><div /></div>',
+          vnode('div', {}, [vnode('div', {id: 'foo'})])
+        )
 
-      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      const firstChildA = nodeA.children[0]
-      patcher.patchChildren(nodeA, nodeB)
-      assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-      expect(
-        patcher.patch.calledWith(firstChildA, nodeB.children[0])
-      ).to.be.true
+        assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+        const firstChildA = nodeA.children[0]
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
+        expect(
+          patcher.patch.calledWith(firstChildA, nodeB.children[0])
+        ).to.be.true
+      })
     })
+
+    describe.only('patching components', () => {
+      it('persists components', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div></div>',
+          vnode('div', {}, [vnode('Foo'), vnode('Foo')])
+        )
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+          </div>
+          `
+        )
+        const components = nodeA.children.map(v => v.component)
+        expect(components[0]).to.be.ok
+        expect(components[0].$el).to.be.ok
+        expect(components[1]).to.be.ok
+        expect(components[1].$el).to.be.ok
+
+        const nodeC = vnode('div', {}, [vnode('Foo'), vnode('Foo')])
+        patcher.patchChildren(nodeA, nodeC)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+          </div>
+          `
+        )
+        expect(nodeC.children[0].component).to.eql(components[0])
+        expect(nodeC.children[1].component).to.eql(components[1])
+
+        const nodeD = vnode('div', {}, [
+          vnode('p'), vnode('Foo'), vnode('Foo')
+        ])
+        patcher.patchChildren(nodeA, nodeD)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <p></p>
+            <div id="foo"></div>
+            <div id="foo"></div>
+          </div>
+          `
+        )
+        expect(nodeA.children[1].component).to.eql(components[0])
+        expect(nodeA.children[2].component).to.eql(components[1])
+      })
+    })
+
     describe('patching keyed nodes', () => {
+      beforeEach(() => {
+        mockOnClass(Patcher, 'patch', sinon.spy())
+      })
+      afterEach(() => {
+        unmockOnClass(Patcher, 'patch', sinon.spy())
+      })
       it('patches keyed nodes for the first time', () => {
         const [nodeA, nodeB, patcher] = setup(
           '<div></div>',
@@ -260,3 +333,21 @@ describe('Patcher', () => {
   })
 })
 
+describe('Index', () => {
+  it('works as intended', () => {
+    const index = new Index()
+    index.queue('a', 1)
+    expect(index.size).to.eql(1)
+    expect(index.peek('a')).to.eql(1)
+    index.queue('a', 2)
+    expect(index.size).to.eql(2)
+    expect(index.peek('a')).to.eql(1)
+
+    expect(index.dequeue('a')).to.eql(1)
+    expect(index.peek('a')).to.eql(2)
+    expect(index.dequeue('a')).to.eql(2)
+
+    expect(index.peek('a')).to.eql(null)
+    expect(index.dequeue('a')).to.eql(null)
+  })
+})

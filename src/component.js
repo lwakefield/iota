@@ -7,6 +7,9 @@ export const components = {}
 export function registerComponent(component) {
   components[component.name] = component
 }
+export function unregisterComponent(name) {
+  delete components[name]
+}
 
 // export function component(options = {}) {
 //   const {el, name} = options
