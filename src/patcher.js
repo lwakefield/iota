@@ -66,11 +66,13 @@ export default class Patcher {
     const attrsA = nodeA.attributes
     const attrsB = nodeB.attributes
 
-    const keys = new Set([...Object.keys(attrsA), ...Object.keys(attrsB)])
-    for (const key of keys) {
-      if (key in attrsA && !(key in attrsB)) {
+    for (const key in attrsA) {
+      if (!(key in attrsB)) {
         nodeA.el.removeAttribute(key)
-      } else if (attrsA[key] !== attrsB[key]) {
+      }
+    }
+    for (const key in attrsB) {
+      if (attrsA[key] != attrsB[key]) {
         nodeA.el.setAttribute(key, attrsB[key])
       }
     }
