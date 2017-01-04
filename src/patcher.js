@@ -26,11 +26,11 @@ const nodeTypesMatch = (nodeA, nodeB) => {
 export default class Patcher {
   // Patches nodeB onto nodeA
   constructor (nodeA) {
-    this.lastNodeA = nodeA
+    this.nodeA = nodeA
   }
   patch(nodeA, nodeB) {
     if (arguments.length === 1) {
-      this.patch(this.lastNodeA, nodeA)
+      this.patch(this.nodeA, nodeA)
       return
     }
 
@@ -121,10 +121,10 @@ export default class Patcher {
 
       if (!childA && childB) throw new Error('could not reconcile nodeA')
 
-      if (!childA.el) {
+      if (childA && !childA.el) {
         childA.el = createElement(childA)
       }
-      if (childA.el && !childA.el.parentNode) {
+      if (childA && childA.el && !childA.el.parentNode) {
         if (i > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile

@@ -45,7 +45,7 @@ describe('Patcher', () => {
       assertHtmlIsEqual(nodeA.el, '<div></div>')
       expect(patcher.patchAttributes.calledWith(nodeA, nodeB)).to.be.true
       expect(patcher.patchChildren.calledWith(nodeA, nodeB)).to.be.true
-      expect(patcher.lastNodeA).to.eql(nodeB)
+      expect(patcher.nodeA.el).to.be.ok
     })
     it('patches text', () => {
       const nodeA = htov('foo')
@@ -53,7 +53,7 @@ describe('Patcher', () => {
       const patcher = new Patcher(nodeA)
       patcher.patch(nodeB)
       expect(nodeA.el.textContent).to.eql(nodeB.textContent)
-      expect(patcher.lastNodeA).to.eql(nodeB)
+      expect(patcher.nodeA.el).to.be.ok
     })
     describe('patches a component', () => {
       beforeEach(() => {
