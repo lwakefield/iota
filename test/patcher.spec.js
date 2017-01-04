@@ -42,7 +42,7 @@ describe('Patcher', () => {
       const nodeB = vnode('div')
       const patcher = new Patcher(nodeA)
       patcher.patch(nodeB)
-      expect(nodeB.el).to.eql(nodeA.el)
+      assertHtmlIsEqual(nodeA.el, '<div></div>')
       expect(patcher.patchAttributes.calledWith(nodeA, nodeB)).to.be.true
       expect(patcher.patchChildren.calledWith(nodeA, nodeB)).to.be.true
       expect(patcher.lastNodeA).to.eql(nodeB)
@@ -52,18 +52,17 @@ describe('Patcher', () => {
       const nodeB = tnode('bar')
       const patcher = new Patcher(nodeA)
       patcher.patch(nodeB)
-      expect(nodeB.el).to.eql(nodeA.el)
       expect(nodeA.el.textContent).to.eql(nodeB.textContent)
       expect(patcher.lastNodeA).to.eql(nodeB)
     })
     describe('patches a component', () => {
       beforeEach(() => {
-        mockOnClass(Foo, 'update', sinon.spy())
         mockOnClass(Foo, 'setProps', sinon.spy())
+        sinon.spy(Foo.prototype, 'mount')
       })
       afterEach(() => {
-        unmockOnClass(Foo, 'update')
         unmockOnClass(Foo, 'setProps')
+        Foo.prototype.mount.restore()
       })
 
       it('does a simple patch with props', () => {
@@ -71,12 +70,19 @@ describe('Patcher', () => {
         const nodeB = vnode('Foo', {props: {foo: 'foobar'}})
         const patcher = new Patcher(nodeA)
 
+        const originalEl = nodeA.el
         patcher.patch(nodeB)
-        expect(nodeB.component).to.be.ok
-        // TODO: will replace the node on first patch
-        // expect(nodeB.component.$el).to.eql(nodeA.el)
-        expect(nodeB.component.update.calledOnce).to.be.true
-        expect(nodeB.component.setProps.calledWith({foo: 'foobar'})).to.be.true
+
+        const {component} = nodeA
+        expect(component).to.be.ok
+        expect(nodeA.el).to.be.ok
+        expect(component.$el).to.be.ok
+        // Will replace the node on first patch
+        expect(nodeA.el).to.not.eql(originalEl)
+        expect(component.$el).to.eql(nodeA.el)
+
+        expect(nodeA.component.setProps.calledWith({foo: 'foobar'})).to.be.true
+        expect(nodeA.component.mount.calledWith(originalEl)).to.be.true
       })
     })
   })
@@ -131,7 +137,7 @@ describe('Patcher', () => {
         assertHtmlIsEqual(nodeA.el, '<div></div>')
         patcher.patchChildren(nodeA, nodeB)
         assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
-        expect(nodeB.children[0].el).to.be.ok
+        expect(nodeA.children[0].el).to.be.ok
       })
       it('removes children', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -152,7 +158,7 @@ describe('Patcher', () => {
         assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
         patcher.patchChildren(nodeA, nodeB)
         assertHtmlIsEqual(nodeA.el, '<div><p></p></div>')
-        expect(nodeB.children[0].el).to.be.ok
+        expect(nodeA.children[0].el).to.be.ok
       })
       it('replace children element node with text node', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -163,7 +169,7 @@ describe('Patcher', () => {
         assertHtmlIsEqual(nodeA.el, '<div><div></div></div>')
         patcher.patchChildren(nodeA, nodeB)
         assertHtmlIsEqual(nodeA.el, '<div>hello</div>')
-        expect(nodeB.children[0].el).to.be.ok
+        expect(nodeA.children[0].el).to.be.ok
       })
       it('patches type matching children', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -181,7 +187,7 @@ describe('Patcher', () => {
       })
     })
 
-    describe.only('patching components', () => {
+    describe('patching components', () => {
       it('persists components', () => {
         const [nodeA, nodeB, patcher] = setup(
           '<div></div>',
@@ -214,8 +220,8 @@ describe('Patcher', () => {
           </div>
           `
         )
-        expect(nodeC.children[0].component).to.eql(components[0])
-        expect(nodeC.children[1].component).to.eql(components[1])
+        expect(nodeA.children[0].component).to.eql(components[0])
+        expect(nodeA.children[1].component).to.eql(components[1])
 
         const nodeD = vnode('div', {}, [
           vnode('p'), vnode('Foo'), vnode('Foo')
@@ -231,6 +237,7 @@ describe('Patcher', () => {
           </div>
           `
         )
+        expect(nodeA.children[0].tagName).to.eql('p')
         expect(nodeA.children[1].component).to.eql(components[0])
         expect(nodeA.children[2].component).to.eql(components[1])
       })
@@ -276,9 +283,9 @@ describe('Patcher', () => {
           nodeA.el,
           '<div><div key="1"></div><div key="2"></div><div key="3"></div></div>'
         )
-        expect(nodeA.children[0].el).to.eql(nodeB.children[0].el)
-        expect(nodeA.children[1].el).to.eql(nodeB.children[1].el)
-        expect(nodeA.children[2].el).to.eql(nodeB.children[2].el)
+        expect(nodeA.children[0].el).to.be.ok
+        expect(nodeA.children[1].el).to.be.ok
+        expect(nodeA.children[2].el).to.be.ok
       })
       it('patches keyed nodes with shuffle', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -298,9 +305,9 @@ describe('Patcher', () => {
           nodeA.el,
           '<div><div key="2"></div><div key="3"></div><div key="1"></div></div>'
         )
-        expect(nodeA.children[0].el).to.eql(nodeB.children[0].el)
-        expect(nodeA.children[1].el).to.eql(nodeB.children[1].el)
-        expect(nodeA.children[2].el).to.eql(nodeB.children[2].el)
+        expect(nodeA.children[0].el).to.be.ok
+        expect(nodeA.children[1].el).to.be.ok
+        expect(nodeA.children[2].el).to.be.ok
       })
       it('patches keyed nodes with non-keyed insertion', () => {
         const [nodeA, nodeB, patcher] = setup(

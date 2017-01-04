@@ -2,18 +2,13 @@ import {ELEMENT_NODE, TEXT_NODE} from './constants'
 import {createElement, getTagName, shallowCloneNode} from './vdom'
 import {max, swap} from './util'
 import {components} from './component'
+import {insertAfter, replaceNode} from './dom'
 
 const isComponent = node => (
   node.nodeType === ELEMENT_NODE &&
   !!components[node.tagName]
 )
 const getComponent = node => components[node.tagName]
-// replace a with b
-const replaceNode = (a, b) => a !== b && a.parentNode
-  && a.parentNode.replaceChild(b, a)
-// insserts b after a
-const insertAfter = (a, b) => a.parentNode
-  && a.parentNode.insertBefore(b, a.nextSibling)
 const getFullKey = node => {
   if (node && isComponent(node)) {
     return node.tagName
@@ -43,21 +38,19 @@ export default class Patcher {
     if (nodeA.nodeType !== nodeB.nodeType) {
       throw new Error('expected nodes to have the same type')
     }
-    nodeB.el = nodeB.el || nodeA.el
 
     if (isComponent(nodeB)) {
-      nodeB.component = nodeA.component || new (getComponent(nodeB))
-      const component = nodeB.component
+      nodeA.component = nodeA.component || new (getComponent(nodeB))
+      const component = nodeA.component
+      component.setProps(nodeB.attributes.props)
+
       if (!component.$el) {
-        // first mount...
-        const rendered = component.render()
-        const el = createElement(rendered)
-        replaceNode(nodeA.el, el)
-        nodeB.el = el
-        component.mount(el)
+        component.mount(nodeA.el)
+        nodeA.el = component.$el
+        this.patchAttributes(nodeA, nodeB)
+        return
       }
 
-      component.setProps(nodeB.attributes.props || {})
       component.update()
       this.patchAttributes(nodeA, nodeB)
     } else if (nodeA.nodeType === TEXT_NODE) {
@@ -109,18 +102,18 @@ export default class Patcher {
         return keyedChildA
       } else if (keyA && childB) {
         // We might want to use childA at a later point in time...
-        childB.el = createElement(childB)
-        replaceNode(childA.el, childB.el)
-        return childB
+        const newChildA = shallowCloneNode(childB)
+        newChildA.el = createElement(childB)
+        replaceNode(childA.el, newChildA.el)
+        return newChildA
       }
       return childA
     }
 
     for (let i = 0; i < len; i++) {
-      let childA = childrenA[i]
       const childB = childrenB[i]
-
-      childA = reconcile(childA, childB)
+      let childA = reconcile(childrenA[i], childB)
+      childrenA[i] = childA
 
       if (i > 0 && childA && childA.el && !childA.el.parentNode) {
         // This happens when we remove a keyed node earlier in the loop
@@ -130,22 +123,24 @@ export default class Patcher {
 
       if (childA && childB) {
         if (nodeTypesMatch(childA, childB)) {
-          childB.el = childB.el || childA.el
+          // childB.el = childB.el || childA.el
           this.patch(childA, childB)
         } else {
-          childB.el = createElement(childB)
-          replaceNode(childA.el, childB.el)
-          this.patch(shallowCloneNode(childB), childB)
+          const el = createElement(childB)
+          replaceNode(childA.el, el)
+          childA.el = el
+          this.patch(childA, childB)
         }
       } else if (!childA) {
-        childB.el = createElement(childB)
-        nodeA.el.appendChild(childB.el)
-        this.patch(shallowCloneNode(childB), childB)
+        childA = shallowCloneNode(childB)
+        childA.el = createElement(childB)
+        childrenA[i] = childA
+        nodeA.el.appendChild(childA.el)
+        this.patch(childA, childB)
       } else if (!childB) {
         nodeA.el.removeChild(childA.el)
+        delete childrenA[i]
       }
-
-      childrenA[i] = childB
     }
   }
 }

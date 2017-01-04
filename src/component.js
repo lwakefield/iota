@@ -1,6 +1,7 @@
 import Patcher from './patcher'
-import {observe, proxy, arrToObj} from './util'
-import {vnode, tnode} from './vdom'
+import {observe, proxy} from './util'
+import {vnode, tnode, createElement} from './vdom'
+import {replaceNode} from './dom'
 
 export const components = {}
 
@@ -32,15 +33,11 @@ export class Component {
     proxy(this, this.$data)
   }
   mount (el) {
-    this.$el = el
-    const tagName = el.tagName.toLowerCase()
-    const attrs = arrToObj(
-      Array.from(el.attributes),
-      ({name, value}) => ({[name]: value})
-    )
-    const root = vnode(tagName, attrs)
-    root.el = el
-    this._patcher = new Patcher(root)
+    const rendered = this.render()
+    this.$el = createElement(rendered)
+    replaceNode(el, this.$el)
+
+    this._patcher = new Patcher(rendered)
   }
   setProps(props) {
     this.$props = props
