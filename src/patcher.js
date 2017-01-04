@@ -18,7 +18,8 @@ const getFullKey = node => {
     null
 }
 const nodeTypesMatch = (nodeA, nodeB) => {
-  return nodeA.nodeType === nodeB.nodeType &&
+  return nodeA && nodeB &&
+    nodeA.nodeType === nodeB.nodeType &&
     getTagName(nodeA) === getTagName(nodeB)
 }
 
@@ -100,7 +101,7 @@ export default class Patcher {
         swap(childrenA, childA, keyedChildA)
         childA && replaceNode(childA.el, keyedChildA.el)
         return keyedChildA
-      } else if (keyA && childB || !childA) {
+      } else if (childB && (keyA || !nodeTypesMatch(childA, childB))) {
         // We might want to use childA at a later point in time...
         const newChildA = shallowCloneNode(childB)
         newChildA.el = createElement(childB)
@@ -115,28 +116,23 @@ export default class Patcher {
       let childA = reconcile(childrenA[i], childB)
       childrenA[i] = childA
 
-      if (childA && childA.el && !childA.el.parentNode) {
+      if (!childA) throw new Error('could not reconcile nodeA')
+
+      if (!childA.el.parentNode) {
         if (i > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile
           insertAfter(childrenA[i - 1].el, childA.el)
         } else {
-          // This happens if childA did not exist initially
+          // This happens if childA did not exist initially, we have reconciled,
+          // but not added it to the dom yet
           nodeA.el.appendChild(childA.el)
         }
       }
 
-      if (childA && childB) {
-        if (nodeTypesMatch(childA, childB)) {
-          // childB.el = childB.el || childA.el
-          this.patch(childA, childB)
-        } else {
-          const el = createElement(childB)
-          replaceNode(childA.el, el)
-          childA.el = el
-          this.patch(childA, childB)
-        }
-      } else if (!childB) {
+      if (childB) {
+        this.patch(childA, childB)
+      } else {
         nodeA.el.removeChild(childA.el)
         delete childrenA[i]
       }
