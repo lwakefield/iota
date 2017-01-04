@@ -100,11 +100,11 @@ export default class Patcher {
         swap(childrenA, childA, keyedChildA)
         childA && replaceNode(childA.el, keyedChildA.el)
         return keyedChildA
-      } else if (keyA && childB) {
+      } else if (keyA && childB || !childA) {
         // We might want to use childA at a later point in time...
         const newChildA = shallowCloneNode(childB)
         newChildA.el = createElement(childB)
-        replaceNode(childA.el, newChildA.el)
+        childA && replaceNode(childA.el, newChildA.el)
         return newChildA
       }
       return childA
@@ -115,10 +115,15 @@ export default class Patcher {
       let childA = reconcile(childrenA[i], childB)
       childrenA[i] = childA
 
-      if (i > 0 && childA && childA.el && !childA.el.parentNode) {
-        // This happens when we remove a keyed node earlier in the loop
-        // ie. case 2 in reconcile
-        insertAfter(childrenA[i - 1].el, childA.el)
+      if (childA && childA.el && !childA.el.parentNode) {
+        if (i > 0) {
+          // This happens when we remove a keyed node earlier in the loop
+          // ie. case 2 in reconcile
+          insertAfter(childrenA[i - 1].el, childA.el)
+        } else {
+          // This happens if childA did not exist initially
+          nodeA.el.appendChild(childA.el)
+        }
       }
 
       if (childA && childB) {
@@ -131,12 +136,6 @@ export default class Patcher {
           childA.el = el
           this.patch(childA, childB)
         }
-      } else if (!childA) {
-        childA = shallowCloneNode(childB)
-        childA.el = createElement(childB)
-        childrenA[i] = childA
-        nodeA.el.appendChild(childA.el)
-        this.patch(childA, childB)
       } else if (!childB) {
         nodeA.el.removeChild(childA.el)
         delete childrenA[i]
