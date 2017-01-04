@@ -2,7 +2,7 @@ import {ELEMENT_NODE, TEXT_NODE} from './constants'
 import {createElement, getTagName, shallowCloneNode} from './vdom'
 import {max, swap} from './util'
 import {components} from './component'
-import {insertAfter, replaceNode} from './dom'
+import {insertAfter, replaceNode, removeNode} from './dom'
 
 const isComponent = node => (
   node.nodeType === ELEMENT_NODE &&
@@ -109,18 +109,20 @@ export default class Patcher {
         newChildA.el = createElement(childB)
         childA && replaceNode(childA.el, newChildA.el)
         return newChildA
+      } else if (!childB) {
+        removeNode(childA.el)
+        return undefined
       }
       return childA
     }
 
     for (let i = 0; i < len; i++) {
-      const childB = childrenB[i]
-      let childA = reconcile(childrenA[i], childB)
-      childrenA[i] = childA
+      childrenA[i] = reconcile(childrenA[i], childrenB[i])
+      const [childA, childB] = [childrenA[i], childrenB[i]]
 
-      if (!childA) throw new Error('could not reconcile nodeA')
+      if (!childA && childB) throw new Error('could not reconcile nodeA')
 
-      if (!childA.el.parentNode) {
+      if (childA && childA.el && !childA.el.parentNode) {
         if (i > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile
@@ -132,12 +134,7 @@ export default class Patcher {
         }
       }
 
-      if (childB) {
-        this.patch(childA, childB)
-      } else {
-        nodeA.el.removeChild(childA.el)
-        delete childrenA[i]
-      }
+      this.patch(childA, childB)
     }
   }
 }
