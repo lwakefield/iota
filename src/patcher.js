@@ -31,7 +31,6 @@ export default class Patcher {
   patch(nodeA, nodeB) {
     if (arguments.length === 1) {
       this.patch(this.lastNodeA, nodeA)
-      this.lastNodeA = nodeA
       return
     }
 
@@ -122,7 +121,10 @@ export default class Patcher {
 
       if (!childA && childB) throw new Error('could not reconcile nodeA')
 
-      if (childA && childA.el && !childA.el.parentNode) {
+      if (!childA.el) {
+        childA.el = createElement(childA)
+      }
+      if (childA.el && !childA.el.parentNode) {
         if (i > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile

@@ -33,8 +33,11 @@ export class Component {
     proxy(this, this.$data)
   }
   mount (el) {
-    const rendered = this.render()
-    this.$el = createElement(rendered)
+    const rendered = this.render.call(
+      Object.assign({vnode, tnode}, this)
+    )
+    rendered.el = createElement(rendered)
+    this.$el = rendered.el
     replaceNode(el, this.$el)
 
     this._patcher = new Patcher(rendered)
