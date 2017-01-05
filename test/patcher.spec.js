@@ -241,6 +241,71 @@ describe('Patcher', () => {
         expect(nodeA.children[1].component).to.eql(components[0])
         expect(nodeA.children[2].component).to.eql(components[1])
       })
+      it('persists keyed components', () => {
+        const [nodeA, nodeB, patcher] = setup(
+          '<div></div>',
+          vnode('div', {}, [
+            vnode('Foo', {key: 0}),
+            vnode('Foo', {key: 1}),
+            vnode('Foo', {key: 2})
+          ])
+        )
+        patcher.patchChildren(nodeA, nodeB)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+          </div>
+          `
+        )
+        const components = nodeA.children.map(v => v.component)
+        expect(components.length).to.eql(3)
+        components.forEach(component => {
+          expect(component).to.be.ok
+          expect(component.$el).to.be.ok
+        })
+
+        const nodeC = vnode('div', {}, [
+          vnode('Foo', {key: 1}),
+          vnode('Foo', {key: 2}),
+          vnode('Foo', {key: 0}),
+        ])
+        patcher.patchChildren(nodeA, nodeC)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+          </div>
+          `
+        )
+        expect(nodeA.children[0].component).to.eql(components[1])
+        expect(nodeA.children[1].component).to.eql(components[2])
+        expect(nodeA.children[2].component).to.eql(components[0])
+
+        const nodeD = vnode('div', {}, [
+          vnode('Foo', {key: 0}),
+          vnode('Foo', {key: 2}),
+        ])
+        patcher.patchChildren(nodeA, nodeD)
+        assertHtmlIsEqual(
+          nodeA.el,
+          `
+          <div>
+            <div id="foo"></div>
+            <div id="foo"></div>
+          </div>
+          `
+        )
+        expect(nodeA.children.length).to.eql(2)
+        expect(nodeA.children[0].component).to.eql(components[0])
+        expect(nodeA.children[1].component).to.eql(components[2])
+      })
     })
 
     describe('patching keyed nodes', () => {

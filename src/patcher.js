@@ -136,8 +136,10 @@ export default class Patcher {
         }
       }
 
-      this.patch(childA, childB)
+      childA && this.patch(childA, childB)
     }
+
+    nodeA.children = childrenA.slice(0, childrenB.length)
   }
 }
 
