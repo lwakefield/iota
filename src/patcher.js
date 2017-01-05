@@ -5,15 +5,17 @@ import {components} from './component'
 import {insertAfter, replaceNode, removeNode} from './dom'
 
 const isComponent = node => (
+  node &&
   node.nodeType === ELEMENT_NODE &&
   !!components[node.tagName]
 )
 const getComponent = node => components[node.tagName]
 const getFullKey = node => {
-  if (node && isComponent(node)) {
+  const hasKey = node && node.attributes && node.attributes.key !== undefined
+  if (!hasKey && isComponent(node)) {
     return node.tagName
   }
-  return node && node.attributes && node.attributes.key ?
+  return hasKey ?
     `${getTagName(node)}.${node.attributes.key}` :
     null
 }
@@ -87,9 +89,7 @@ export default class Patcher {
     const indexed = new Index()
     for (let i = 0; i < childrenA.length; i++) {
       const child = childrenA[i]
-      const key = child.component ?
-        child.component.constructor.name :
-        getFullKey(child)
+      const key = getFullKey(child)
       if (key) {
         indexed.queue(key, child)
       }

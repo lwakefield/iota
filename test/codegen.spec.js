@@ -46,9 +46,9 @@ describe('Codegen', () => {
         vnode('div', {id: 'app'}, [
           vnode('h1', {}, [tnode(' Hello foobar ')]),
           vnode('ul', {}, [
-            vnode('li', {}, [tnode('one')]),
+            vnode('li', {key: 0}, [tnode('one')]),
             null,
-            vnode('li', {}, [tnode('three')])
+            vnode('li', {key: 2}, [tnode('three')])
           ])
         ])
       )
@@ -117,14 +117,14 @@ describe('Codegen', () => {
       const el = htoe('<div i-for="val of vals" />')
       const code = Codegen.codegenElementNode(el)
       expect(code).to.eql(
-        "...vals.map(val => vnode('div',{},[]))"
+        "...vals.map((val, $index) => vnode('div',{key: $index},[]))"
       )
     })
     it('generates for an element with i-for and i-if', () => {
       const el = htoe('<div i-for="val of vals" i-if="toggle" />')
       const code = Codegen.codegenElementNode(el)
       expect(code).to.eql(
-        "...vals.map(val => toggle ? vnode('div',{},[]) : null)"
+        "...vals.map((val, $index) => toggle ? vnode('div',{key: $index},[]) : null)"
       )
     })
     it('generates for an element with children and attributes', () => {

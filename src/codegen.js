@@ -36,15 +36,11 @@ export default class Codegen {
     }
     if (attrs['i-for' ]) {
       const [, local, from] = attrs['i-for'].match(/(.*) of (.*)/)
-      code = `...${from}.map(${local} => ${code})`
+      code = `...${from}.map((${local}, $index) => ${code})`
     }
     return code
   }
   static codegenAttributes (node) {
-    const props = Array.from(node.attributes)
-      .filter(({name}) => name.match(/^:/))
-      .map(({name, value}) => `${name.replace(':', '')}: ${value}`)
-      .join(',')
     const attrs = Array.from(node.attributes)
       .filter(({name}) =>
         name !== 'i-if' &&
@@ -52,10 +48,22 @@ export default class Codegen {
         !name.match(/^:/)
       )
       .map(({name, value}) => `${name}: \`${value}\``)
-    if (props.length) {
-      attrs.push(`props: {${props}}`)
+
+    if (node.attributes['i-for'] && !node.attributes['key']) {
+      attrs.push('key: $index')
+    }
+
+    const propString = Codegen.codegenProps(node)
+    if (propString !== '{}') {
+      attrs.push(`props: ${Codegen.codegenProps(node)}`)
     }
     return `{${attrs.join(',')}}`
+  }
+  static codegenProps (node) {
+    const props = Array.from(node.attributes)
+      .filter(({name}) => name.match(/^:/))
+      .map(({name, value}) => `${name.replace(':', '')}: ${value}`)
+    return `{${props.join(',')}}`
   }
   static codegenChildren (node) {
     const children = Array.from(node.childNodes).map(Codegen.codegenNode)
