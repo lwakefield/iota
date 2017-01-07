@@ -11,12 +11,12 @@ const isComponent = node => (
 )
 const getComponent = node => components[node.tagName]
 const getFullKey = node => {
-  const hasKey = node && node.attributes && node.attributes.key !== undefined
+  const hasKey = node && node.options && node.options.key !== undefined
   if (!hasKey && isComponent(node)) {
     return node.tagName
   }
   return hasKey ?
-    `${getTagName(node)}.${node.attributes.key}` :
+    `${getTagName(node)}.${node.options.key}` :
     null
 }
 const nodeTypesMatch = (nodeA, nodeB) => {
@@ -44,7 +44,7 @@ export default class Patcher {
     if (isComponent(nodeB)) {
       nodeA.component = nodeA.component || new (getComponent(nodeB))
       const component = nodeA.component
-      component.setProps(nodeB.attributes.props)
+      component.setProps(nodeB.options.props || {})
 
       if (!component.$el) {
         component.mount(nodeA.el)
@@ -64,8 +64,8 @@ export default class Patcher {
   }
   patchAttributes(nodeA, nodeB) {
     // We expect nodeA to have already been mounted
-    const attrsA = nodeA.attributes
-    const attrsB = nodeB.attributes
+    const attrsA = nodeA.options.attributes || {}
+    const attrsB = nodeB.options.attributes || {}
 
     for (const key in attrsA) {
       if (!(key in attrsB)) {
@@ -78,7 +78,7 @@ export default class Patcher {
       }
     }
 
-    nodeA.attributes = nodeB.attributes
+    nodeA.options.attributes = nodeB.options.attributes
   }
   patchChildren(nodeA, nodeB) {
     const childrenA = nodeA.children
@@ -125,7 +125,7 @@ export default class Patcher {
         childA.el = createElement(childA)
       }
       if (childA && childA.el && !childA.el.parentNode) {
-        if (i > 0) {
+          if (i > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile
           insertAfter(childrenA[i - 1].el, childA.el)

@@ -16,7 +16,7 @@ describe('tnode', () => {
 describe('createElement', () => {
   it('creates a vnode with attributes', () => {
     assertHtmlIsEqual(
-      createElement(vnode('div', {id: 'foo', class: 'bar'})),
+      createElement(vnode('div', {attributes: {id: 'foo', class: 'bar'}})),
       htoe('<div id="foo" class="bar"></div>')
     )
   })

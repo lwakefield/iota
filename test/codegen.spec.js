@@ -2,7 +2,15 @@
 import jsdom from 'jsdom'
 import {expect} from 'chai'
 
-import Codegen from '../src/codegen'
+import {
+  codegen,
+  codegenAttributes,
+  codegenTextNode,
+  codegenChildren,
+  codegenElementNode,
+  codegenNode,
+  codegenProps,
+} from '../src/codegen'
 import {vnode, tnode} from '../src/vdom'
 import {
   htoe,
@@ -29,7 +37,7 @@ describe('Codegen', () => {
           </ul>
         </div>
       `)
-      const app = Codegen.codegen(root)
+      const app = codegen(root)
       expect(app).instanceOf(Function)
 
       const rendered = app.call({
@@ -43,7 +51,7 @@ describe('Codegen', () => {
         ]
       })
       expect(rendered).to.eql(
-        vnode('div', {id: 'app'}, [
+        vnode('div', {attributes: {id: 'app'}}, [
           vnode('h1', {}, [tnode(' Hello foobar ')]),
           vnode('ul', {}, [
             vnode('li', {key: 0}, [tnode('one')]),
@@ -59,27 +67,27 @@ describe('Codegen', () => {
       const p = htoe(
         '<p id="foo" class="class1 class2 ${class3}"></p>'
       )
-      expect(Codegen.codegenAttributes(p))
+      expect(codegenAttributes(p))
         .to.eql('{id: `foo`,class: `class1 class2 ${class3}`}')
     })
     it('generates props', () => {
       const p = htoe(
         '<p :foo="foobar"></p>'
       )
-      expect(Codegen.codegenAttributes(p))
+      expect(codegenAttributes(p))
         .to.eql('{props: {foo: foobar}}')
     })
   })
   describe('codegenTextNode', () => {
     it('generates tnode', () => {
       const t = htoe('foo ${bar}')
-      expect(Codegen.codegenTextNode(t)).to.eql('tnode(`foo ${bar}`)')
+      expect(codegenTextNode(t)).to.eql('tnode(`foo ${bar}`)')
     })
   })
   describe('codegenChildren', () => {
     it('generates children', () => {
       const el = htoe('<div><p></p><span></span><h1></h1></div>')
-      const code = Codegen.codegenChildren(el)
+      const code = codegenChildren(el)
       expect(code).to.eql(
         `[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])]`
       )
@@ -88,41 +96,41 @@ describe('Codegen', () => {
   describe('codegenElement', () => {
     it('generates for an element with no children and no attributes', () => {
       const el = htoe('<div/>')
-      expect(Codegen.codegenElementNode(el)).to.eql(`vnode('div',{},[])`)
+      expect(codegenElementNode(el)).to.eql(`vnode('div',{},[])`)
     })
     it('generates for an element with attributes and no children', () => {
       const el = htoe(
         '<div id="foo" class="class1 class2 ${class3}"/>'
       )
-      const code = Codegen.codegenElementNode(el)
+      const code = codegenElementNode(el)
       expect(code).to.eql(
-        "vnode('div',{id: `foo`,class: `class1 class2 ${class3}`},[])"
+        "vnode('div',{attributes: {id: `foo`,class: `class1 class2 ${class3}`}},[])"
       )
     })
     it('generates for an element with children and no attributes', () => {
       const el = htoe('<div><p></p><span></span><h1></h1></div>')
-      const code = Codegen.codegenElementNode(el)
+      const code = codegenElementNode(el)
       expect(code).to.eql(
         "vnode('div',{},[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])])"
       )
     })
     it('generates for an element with i-if', () => {
       const el = htoe('<div i-if="toggle" />')
-      const code = Codegen.codegenElementNode(el)
+      const code = codegenElementNode(el)
       expect(code).to.eql(
         "toggle ? vnode('div',{},[]) : null"
       )
     })
     it('generates for an element with i-for', () => {
       const el = htoe('<div i-for="val of vals" />')
-      const code = Codegen.codegenElementNode(el)
+      const code = codegenElementNode(el)
       expect(code).to.eql(
         "...vals.map((val, $index) => vnode('div',{key: $index},[]))"
       )
     })
     it('generates for an element with i-for and i-if', () => {
       const el = htoe('<div i-for="val of vals" i-if="toggle" />')
-      const code = Codegen.codegenElementNode(el)
+      const code = codegenElementNode(el)
       expect(code).to.eql(
         "...vals.map((val, $index) => toggle ? vnode('div',{key: $index},[]) : null)"
       )
@@ -133,12 +141,12 @@ describe('Codegen', () => {
           <p></p><span></span><h1></h1>
         </div>`
       )
-      const code = Codegen.codegenElementNode(el)
+      const code = codegenElementNode(el)
       assertCodeIsEqual(
         code,
         `
         vnode('div',
-          {id: \`foo\`,class: \`class1 class2 \${class3}\`},
+          {attributes: {id: \`foo\`,class: \`class1 class2 \${class3}\`}},
           [
             vnode('p',{},[]),
             vnode('span',{},[]),

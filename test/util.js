@@ -33,12 +33,19 @@ export function htov(html) {
 export function dtov (node) {
   if (node.nodeType === ELEMENT_NODE) {
     const tagName = node.tagName.toLowerCase()
-    const attrs = arrToObj(
+    const attributes = arrToObj(
       Array.from(node.attributes),
       ({name, value}) => ({[name]: value})
     )
+    const options = {attributes}
+    // TODO make this more obvious in tests
+    if (attributes.key) {
+      node.removeAttribute('key')
+      options.key = attributes.key
+      delete attributes.key
+    }
     const children = Array.from(node.childNodes).map(dtov)
-    const n = vnode(tagName, attrs, children)
+    const n = vnode(tagName, options, children)
     n.el = node
     return n
   } else if (node.nodeType === TEXT_NODE) {

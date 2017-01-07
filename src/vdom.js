@@ -1,7 +1,7 @@
 import {ELEMENT_NODE, TEXT_NODE} from './constants'
 
-export function vnode (tagName, attributes = {}, children = []) {
-  return {tagName, attributes, children, nodeType: ELEMENT_NODE}
+export function vnode (tagName, options = {}, children = []) {
+  return {tagName, options, children, nodeType: ELEMENT_NODE}
 }
 
 export function tnode (text) {
@@ -9,9 +9,9 @@ export function tnode (text) {
 }
 
 export function shallowCloneNode (node) {
-  const {tagName, attributes, el, textContent, nodeType} = node
+  const {tagName, options, el, textContent, nodeType} = node
   if (node.nodeType === ELEMENT_NODE) {
-    return Object.assign({}, {tagName, attributes, el, nodeType, children: []})
+    return Object.assign({}, {tagName, options, el, nodeType, children: []})
   } else if (node.nodeType === TEXT_NODE) {
     return Object.assign({}, {textContent, nodeType, el})
   }
@@ -27,7 +27,7 @@ export function getTagName (node) {
 export function createElement (node) {
   if (node.nodeType === ELEMENT_NODE) {
     const el = document.createElement(node.tagName)
-    const attrs = node.attributes
+    const attrs = node.options.attributes || {}
     for (const key in attrs) {
       el.setAttribute(key, attrs[key])
     }

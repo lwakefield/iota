@@ -21,7 +21,7 @@ beforeEach(() => {
 
 class Foo extends Component {
   render () {
-    return vnode('div', {id: 'foo'})
+    return vnode('div', {attributes: {id: 'foo'}})
   }
 }
 before(() => {registerComponent(Foo)})
@@ -91,7 +91,7 @@ describe('Patcher', () => {
     const patchAttributes = patcher.patchAttributes
     it('adds attributes', () => {
       const nodeA = htov('<div />')
-      const nodeB = vnode('div', {id: 'foo'})
+      const nodeB = vnode('div', {attributes: {id: 'foo'}})
       patchAttributes(nodeA, nodeB)
 
       assertHtmlIsEqual(nodeA.el, '<div id="foo"></div>')
@@ -99,7 +99,7 @@ describe('Patcher', () => {
     })
     it('updates attributes', () => {
       const nodeA = htov('<div id="foo" />')
-      const nodeB = vnode('div', {id: 'bar'})
+      const nodeB = vnode('div', {attributes: {id: 'bar'}})
       patchAttributes(nodeA, nodeB)
 
       assertHtmlIsEqual(nodeA.el, '<div id="bar"></div>')
@@ -107,7 +107,7 @@ describe('Patcher', () => {
     })
     it('deletes attributes', () => {
       const nodeA = htov('<div id="foo" />')
-      const nodeB = vnode('div', {})
+      const nodeB = vnode('div')
       patchAttributes(nodeA, nodeB)
 
       assertHtmlIsEqual(nodeA.el, '<div></div>')
@@ -310,10 +310,10 @@ describe('Patcher', () => {
 
     describe('patching keyed nodes', () => {
       beforeEach(() => {
-        mockOnClass(Patcher, 'patch', sinon.spy())
+        sinon.stub(Patcher.prototype, 'patch')
       })
       afterEach(() => {
-        unmockOnClass(Patcher, 'patch', sinon.spy())
+        Patcher.prototype.patch.restore()
       })
       it('patches keyed nodes for the first time', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -327,7 +327,7 @@ describe('Patcher', () => {
         patcher.patchChildren(nodeA, nodeB)
         assertHtmlIsEqual(
           nodeA.el,
-          '<div><div key="1"></div><div key="2"></div><div key="3"></div></div>'
+          '<div><div></div><div></div><div></div></div>'
         )
       })
       it('patches keyed nodes with no changes', () => {
@@ -343,14 +343,17 @@ describe('Patcher', () => {
             vnode('div', {key: 3}),
           ])
         )
+
+        const childEls = nodeA.children.map(v => v.el)
         patcher.patchChildren(nodeA, nodeB)
         assertHtmlIsEqual(
           nodeA.el,
-          '<div><div key="1"></div><div key="2"></div><div key="3"></div></div>'
+          '<div><div></div><div></div><div></div></div>'
         )
-        expect(nodeA.children[0].el).to.be.ok
-        expect(nodeA.children[1].el).to.be.ok
-        expect(nodeA.children[2].el).to.be.ok
+        nodeA.children.forEach(v => expect(v.el).to.be.ok)
+        expect(nodeA.children[0].el).to.eql(childEls[0])
+        expect(nodeA.children[1].el).to.eql(childEls[1])
+        expect(nodeA.children[2].el).to.eql(childEls[2])
       })
       it('patches keyed nodes with shuffle', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -365,14 +368,17 @@ describe('Patcher', () => {
             vnode('div', {key: 1}),
           ])
         )
+        const childEls = nodeA.children.map(v => v.el)
         patcher.patchChildren(nodeA, nodeB)
         assertHtmlIsEqual(
           nodeA.el,
-          '<div><div key="2"></div><div key="3"></div><div key="1"></div></div>'
+          '<div><div></div><div></div><div></div></div>'
         )
-        expect(nodeA.children[0].el).to.be.ok
-        expect(nodeA.children[1].el).to.be.ok
-        expect(nodeA.children[2].el).to.be.ok
+        nodeA.children.forEach(v => expect(v.el).to.be.ok)
+
+        expect(nodeA.children[0].el).to.eql(childEls[1])
+        expect(nodeA.children[1].el).to.eql(childEls[2])
+        expect(nodeA.children[2].el).to.eql(childEls[0])
       })
       it('patches keyed nodes with non-keyed insertion', () => {
         const [nodeA, nodeB, patcher] = setup(
@@ -394,9 +400,9 @@ describe('Patcher', () => {
           `
           <div>
             <p></p>
-            <div key="1"></div>
-            <div key="2"></div>
-            <div key="3"></div>
+            <div></div>
+            <div></div>
+            <div></div>
           </div>
           `
         )
