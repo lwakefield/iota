@@ -1,12 +1,9 @@
 import {
   TEXT_NODE,
   ELEMENT_NODE,
-  FORM_ELS,
 } from './constants'
 import {arrToObj} from './util'
-
-const FORM_EL_REGEX = new RegExp(FORM_ELS.join('|'))
-const isFormEl = node => FORM_EL_REGEX.test(node.tagName.toLowerCase())
+import {isFormEl} from './dom'
 
 export function codegen (node) {
   return new Function(
@@ -86,6 +83,6 @@ export function codegenOptions (node) {
 }
 
 export function codegenChildren (node) {
-  const children = Array.from(node.childNodes).map(codegenNode)
+  const children = Array.from(node.childNodes).map(codegenNode).filter(v => !!v)
   return `[${children.join(',')}]`
 }

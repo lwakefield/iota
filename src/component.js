@@ -35,12 +35,14 @@ export class Component {
     this.tnode = tnode
 
     proxy(this, this.$data)
-    proxy(this, this.$methods)
+    const $methods = {}
+    for (const name in methods) {
+      $methods[name] = methods[name].bind(this)
+    }
+    proxy(this, $methods)
   }
   mount (el) {
-    const rendered = this.render.call(
-      Object.assign({vnode, tnode}, this)
-    )
+    const rendered = this.render.call(this)
     rendered.el = createElement(rendered)
     this.$el = rendered.el
     replaceNode(el, this.$el)
@@ -54,9 +56,7 @@ export class Component {
     throw new Error('Not implemented')
   }
   update () {
-    const rendered = this.render.call(
-      this
-    )
+    const rendered = this.render.call(this)
     this._patcher.patch(rendered)
   }
 }
