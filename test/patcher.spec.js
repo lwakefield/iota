@@ -17,6 +17,7 @@ beforeEach(() => {
   const document = window.document
   global['window'] = window
   global['document'] = document
+  global['Event'] = window.Event
 })
 
 class Foo extends Component {
@@ -410,7 +411,6 @@ describe('Patcher', () => {
     })
   })
   describe('patchEvents', () => {
-    const {Event} = window
     function setup (htmlForNodeA, nodeB) {
       const nodeA = htov(htmlForNodeA)
       const patcher = new Patcher()
