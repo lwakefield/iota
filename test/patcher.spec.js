@@ -409,6 +409,75 @@ describe('Patcher', () => {
       })
     })
   })
+  describe('patchEvents', () => {
+    const {Event} = window
+    function setup (htmlForNodeA, nodeB) {
+      const nodeA = htov(htmlForNodeA)
+      const patcher = new Patcher()
+      return [nodeA, nodeB, patcher]
+    }
+
+    it('adds an event listener', () => {
+      const spy = sinon.spy()
+      const [nodeA, nodeB, patcher] = setup(
+        '<button></button>',
+        vnode('button', {events: {click: spy}})
+      )
+
+      patcher.patchEvents(nodeA, nodeB)
+      const eventsA = nodeA.options.events
+      expect(eventsA).to.be.ok
+      expect(eventsA.click).to.be.ok
+      expect(eventsA.click.listener).to.be.ok
+      expect(eventsA.click.handler).to.eql(spy)
+
+      const clickEvent = new Event('click')
+      nodeA.el.dispatchEvent(clickEvent)
+      expect(spy.called).to.be.true
+      expect(spy.calledWith(clickEvent)).to.be.true
+    })
+
+    it('adds an event listener', () => {
+      const [nodeA, nodeB, patcher] = setup(
+        '<button></button>',
+        vnode('button')
+      )
+
+      const listener = sinon.spy()
+      nodeA.options = {
+        events: {
+          click: {listener}
+        }
+      }
+      nodeA.el.addEventListener('click', listener)
+      nodeA.el.dispatchEvent(new Event('click'))
+      expect(listener.calledOnce).to.be.true
+
+      patcher.patchEvents(nodeA, nodeB)
+      expect(nodeA.options.events).to.eql({})
+      nodeA.el.dispatchEvent(new Event('click'))
+      expect(listener.calledOnce).to.be.true
+    })
+
+    it('adds an event listener', () => {
+      const [nodeA, nodeB, patcher] = setup(
+        '<button></button>',
+        vnode('button', {events: {click: sinon.spy()}})
+      )
+
+      patcher.patchEvents(nodeA, nodeB)
+      nodeA.el.dispatchEvent(new Event('click'))
+      expect(nodeB.options.events.click.calledOnce).to.be.true
+
+      const nodeC = vnode('button', {events: {click: sinon.spy()}})
+
+      patcher.patchEvents(nodeA, nodeC)
+      expect(nodeA.options.events.click.handler).to.eql(nodeC.options.events.click)
+      nodeA.el.dispatchEvent(new Event('click'))
+      expect(nodeC.options.events.click.calledOnce).to.be.true
+      expect(nodeB.options.events.click.calledOnce).to.be.true
+    })
+  })
 })
 
 describe('Index', () => {

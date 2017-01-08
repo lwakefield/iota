@@ -53,9 +53,9 @@ export function codegenOptions (node) {
     if (name === 'key') {
       key = `key: \`${value}\``
     } else if (name[0] === ':') {
-      props.push(`${name.split(1)}: \`${value}\``)
+      props.push(`${name.substr(1)}: ${value}`)
     } else if (name[0] === '@') {
-      events.push(`${name.split(1)}: \`${value}\``)
+      events.push(`${name.substr(1)}: $event => ${value}`)
     } else {
       attrs.push(`${name}: \`${value}\``)
     }
@@ -72,41 +72,6 @@ export function codegenOptions (node) {
   events.length && toAdd.push(`events: {${events.join(',')}}`)
 
   return `{${toAdd.join(',')}}`
-}
-
-export function codegenAttributes (node) {
-  const attrs = Array.from(node.attributes)
-    .filter(({name}) =>
-      name !== 'i-if' &&
-      name !== 'i-for' &&
-      !name.match(/^:/) &&
-      !name.match(/^@/)
-    )
-    .map(({name, value}) => `${name}: \`${value}\``)
-
-  if (node.attributes['i-for'] && !node.attributes['key']) {
-    attrs.push('key: $index')
-  }
-
-  const propString = codegenProps(node)
-  if (propString !== '{}') {
-    attrs.push(`props: ${codegenProps(node)}`)
-  }
-  return `{${attrs.join(',')}}`
-}
-
-export function codegenProps (node) {
-  const props = Array.from(node.attributes)
-    .filter(({name}) => name.match(/^:/))
-    .map(({name, value}) => `${name.replace(':', '')}: ${value}`)
-  return `{${props.join(',')}}`
-}
-
-export function codegenEvents (node) {
-  const props = Array.from(node.attributes)
-    .filter(({name}) => name.match(/^@/))
-    .map(({name, value}) => `${name.replace('@', '')}: ${value}`)
-  return `{${props.join(',')}}`
 }
 
 export function codegenChildren (node) {

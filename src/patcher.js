@@ -63,7 +63,6 @@ export default class Patcher {
     }
   }
   patchAttributes(nodeA, nodeB) {
-    // We expect nodeA to have already been mounted
     const attrsA = nodeA.options.attributes || {}
     const attrsB = nodeB.options.attributes || {}
 
@@ -79,6 +78,34 @@ export default class Patcher {
     }
 
     nodeA.options.attributes = nodeB.options.attributes
+  }
+  patchEvents(nodeA, nodeB) {
+    const eventsA = nodeA.options.events || {}
+    const eventsB = nodeB.options.events || {}
+
+    for (const key in eventsA) {
+      if (!eventsB[key]) {
+        nodeA.el.removeEventListener(key, eventsA[key].listener)
+        delete eventsA[key]
+      }
+    }
+    for (const key in eventsB) {
+      if (!eventsA[key]) {
+        const container = {}
+        container.listener = ($event) => {
+          const result = container.handler($event)
+          if (result instanceof Function) {
+            result($event)
+          }
+        }
+        nodeA.el.addEventListener(key, container.listener)
+        eventsA[key] = container
+      }
+
+      eventsA[key].handler = eventsB[key]
+    }
+
+    nodeA.options.events = eventsA
   }
   patchChildren(nodeA, nodeB) {
     const childrenA = nodeA.children
@@ -125,7 +152,7 @@ export default class Patcher {
         childA.el = createElement(childA)
       }
       if (childA && childA.el && !childA.el.parentNode) {
-          if (i > 0) {
+        if (i > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile
           insertAfter(childrenA[i - 1].el, childA.el)

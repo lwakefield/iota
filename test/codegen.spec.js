@@ -4,12 +4,11 @@ import {expect} from 'chai'
 
 import {
   codegen,
-  codegenAttributes,
+  codegenOptions,
   codegenTextNode,
   codegenChildren,
   codegenElementNode,
   codegenNode,
-  codegenProps,
 } from '../src/codegen'
 import {vnode, tnode} from '../src/vdom'
 import {
@@ -62,20 +61,22 @@ describe('Codegen', () => {
       )
     })
   })
-  describe('codegenAttributes', () => {
+  describe('codegenOptions', () => {
+    const cg = html => codegenOptions(htoe(html))
     it('generates multiple attributes', () => {
-      const p = htoe(
-        '<p id="foo" class="class1 class2 ${class3}"></p>'
-      )
-      expect(codegenAttributes(p))
-        .to.eql('{id: `foo`,class: `class1 class2 ${class3}`}')
+      expect(cg('<p id="foo" class="class1 class2 ${class3}"></p>'))
+        .to.eql('{attributes: {id: `foo`,class: `class1 class2 ${class3}`}}')
     })
     it('generates props', () => {
-      const p = htoe(
-        '<p :foo="foobar"></p>'
-      )
-      expect(codegenAttributes(p))
+      expect(cg('<p :foo="foobar"></p>'))
         .to.eql('{props: {foo: foobar}}')
+    })
+    it('generates events', () => {
+      expect(cg('<p @input="handleInput"></p>'))
+        .to.eql('{events: {input: $event => handleInput}}')
+
+      expect(cg('<p @input="handleInput(id)"></p>'))
+        .to.eql('{events: {input: $event => handleInput(id)}}')
     })
   })
   describe('codegenTextNode', () => {
