@@ -70,7 +70,12 @@ export function codegenOptions (node) {
   }
   if (isFormEl(node) && /\${.*}/.test(node.getAttribute('value'))) {
     const pointer = node.getAttribute('value').match(/\${(.*)}/)[1]
-    events.push(`input: $event => ${pointer} = $event.target.value`)
+
+    if (['radio', 'checkbox'].indexOf(node.getAttribute('type')) !== -1) {
+      events.push(`change: $event => ${pointer} = $event.target.checked`)
+    } else {
+      events.push(`input: $event => ${pointer} = $event.target.value`)
+    }
   }
 
   const toAdd = []

@@ -1,5 +1,5 @@
 export function observe (obj, fn) {
-  return new Proxy(obj, {
+  const p =  new Proxy(obj, {
     set (target, property, val) {
       target[property] = val instanceof Array || val instanceof Object
         ? observe(val, fn)
@@ -8,6 +8,14 @@ export function observe (obj, fn) {
       return true
     }
   })
+
+  for (let key of Object.keys(obj)) {
+    if (typeof obj[key] === 'object') {
+      obj[key] = observe(obj[key], fn)
+    }
+  }
+
+  return p
 }
 
 export function proxy (ontoObj, val) {
