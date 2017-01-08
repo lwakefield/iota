@@ -1,5 +1,12 @@
-import {TEXT_NODE, ELEMENT_NODE} from './constants'
+import {
+  TEXT_NODE,
+  ELEMENT_NODE,
+  FORM_ELS,
+} from './constants'
 import {arrToObj} from './util'
+
+const FORM_EL_REGEX = new RegExp(FORM_ELS.join('|'))
+const isFormEl = node => FORM_EL_REGEX.test(node.tagName.toLowerCase())
 
 export function codegen (node) {
   return new Function(
@@ -63,6 +70,10 @@ export function codegenOptions (node) {
 
   if (node.attributes['i-for'] && !node.attributes['key']) {
     key = 'key: $index'
+  }
+  if (isFormEl(node) && /\${.*}/.test(node.getAttribute('value'))) {
+    const pointer = node.getAttribute('value').match(/\${(.*)}/)[1]
+    events.push(`input: $event => ${pointer} = $event.target.value`)
   }
 
   const toAdd = []
