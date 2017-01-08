@@ -7,5 +7,6 @@ module.exports = function app(el, options = {}) {
   el.parentNode.replaceChild(placeHolder, el)
   component.render = codegen(el)
   component.mount(placeHolder)
+  component.update()
   return component
 }

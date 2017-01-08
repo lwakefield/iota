@@ -24,13 +24,15 @@ export function unregisterComponent(name) {
 
 export class Component {
   constructor (options = {}) {
-    const {data = {}} = options
+    const {data = {}, methods} = options
     this.$data = observe(data, this.update.bind(this))
+    this.$methods = methods
     this.$el = null
     this._patcher = null
     this.$props = {}
 
     proxy(this, this.$data)
+    proxy(this, this.$methods)
   }
   mount (el) {
     const rendered = this.render.call(

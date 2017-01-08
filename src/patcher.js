@@ -54,10 +54,12 @@ export default class Patcher {
       }
 
       component.update()
+      this.patchEvents(nodeA, nodeB)
       this.patchAttributes(nodeA, nodeB)
     } else if (nodeA.nodeType === TEXT_NODE) {
       nodeA.el.textContent = nodeB.textContent
     } else if (nodeA.nodeType === ELEMENT_NODE) {
+      this.patchEvents(nodeA, nodeB)
       this.patchAttributes(nodeA, nodeB)
       this.patchChildren(nodeA, nodeB)
     }
@@ -90,7 +92,7 @@ export default class Patcher {
       }
     }
     for (const key in eventsB) {
-      if (!eventsA[key]) {
+      if (!eventsA[key] || !eventsA[key].listener) {
         const container = {}
         container.listener = ($event) => {
           const result = container.handler($event)
