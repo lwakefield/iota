@@ -31,6 +31,9 @@ export class Component {
     this._patcher = null
     this.$props = {}
 
+    this.vnode = vnode
+    this.tnode = tnode
+
     proxy(this, this.$data)
     proxy(this, this.$methods)
   }
@@ -52,7 +55,7 @@ export class Component {
   }
   update () {
     const rendered = this.render.call(
-      Object.assign({vnode, tnode}, this)
+      this
     )
     this._patcher.patch(rendered)
   }
