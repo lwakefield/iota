@@ -48,8 +48,22 @@ export function codegenElementNode (node) {
 }
 
 export function codegenOptions (node) {
-  const [attrs, props, events] = [[], [], []]
+  const [attrs, props, events] = [[], [], {}]
   let key = null
+  function addEvent(key, fnString) {
+    if (!events[key]) events[key] = []
+    events[key].push(fnString)
+  }
+
+  if (isFormEl(node)) {
+    if (/\${.*}/.test(node.getAttribute('value'))) {
+      const pointer = node.getAttribute('value').match(/\${(.*)}/)[1]
+      addEvent('input', `$event => ${pointer} = $event.target.value`)
+    } else if (/\${.*}/.test(node.getAttribute('checked'))) {
+      const pointer = node.getAttribute('checked').match(/\${(.*)}/)[1]
+      addEvent('change', `$event => ${pointer} = $event.target.checked`)
+    }
+  }
 
   for (const {name, value} of Array.from(node.attributes)) {
     if (name === 'i-for' || name === 'i-if') continue
@@ -59,7 +73,7 @@ export function codegenOptions (node) {
     } else if (name[0] === ':') {
       props.push(`${name.substr(1)}: ${value}`)
     } else if (name[0] === '@') {
-      events.push(`${name.substr(1)}: $event => ${value}`)
+      addEvent(name.substr(1), `$event => ${value}`)
     } else {
       attrs.push(`${name}: \`${value}\``)
     }
@@ -68,21 +82,16 @@ export function codegenOptions (node) {
   if (node.attributes['i-for'] && !node.attributes['key']) {
     key = 'key: $index'
   }
-  if (isFormEl(node) && /\${.*}/.test(node.getAttribute('value'))) {
-    const pointer = node.getAttribute('value').match(/\${(.*)}/)[1]
-
-    if (['radio', 'checkbox'].indexOf(node.getAttribute('type')) !== -1) {
-      events.push(`change: $event => ${pointer} = $event.target.checked`)
-    } else {
-      events.push(`input: $event => ${pointer} = $event.target.value`)
-    }
-  }
 
   const toAdd = []
   key && toAdd.push(key)
   attrs.length && toAdd.push(`attributes: {${attrs.join(',')}}`)
   props.length && toAdd.push(`props: {${props.join(',')}}`)
-  events.length && toAdd.push(`events: {${events.join(',')}}`)
+  Object.keys(events).length && toAdd.push(`events: {${
+    Object.keys(events)
+      .map(key => `${key}: [${events[key].join(',')}]`)
+      .join(',')
+  }}`)
 
   return `{${toAdd.join(',')}}`
 }

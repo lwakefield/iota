@@ -1,6 +1,8 @@
 export function observe (obj, fn) {
   if (obj.__observer__) return obj.__observer__
 
+  // We should probably do this after the proxying so we don't modify the
+  // original object
   for (const key in obj) {
     if (obj[key] instanceof Object) {
       obj[key] = observe(obj[key], fn)

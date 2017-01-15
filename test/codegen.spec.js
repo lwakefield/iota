@@ -73,10 +73,23 @@ describe('Codegen', () => {
     })
     it('generates events', () => {
       expect(cg('<p @input="handleInput"></p>'))
-        .to.eql('{events: {input: $event => handleInput}}')
+        .to.eql('{events: {input: [$event => handleInput]}}')
 
       expect(cg('<p @input="handleInput(id)"></p>'))
-        .to.eql('{events: {input: $event => handleInput(id)}}')
+        .to.eql('{events: {input: [$event => handleInput(id)]}}')
+
+      assertCodeIsEqual(
+        cg('<input @input="handleInput" value="${name}"></input>'),
+        `{
+          attributes: {value: \`\${name}\`},
+          events: {
+            input: [
+              $event => handleInput,
+              $event => name = $event.target.value
+            ]
+          }
+        }`
+      )
     })
   })
   describe('codegenTextNode', () => {

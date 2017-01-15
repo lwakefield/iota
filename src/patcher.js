@@ -97,17 +97,19 @@ export default class Patcher {
     for (const key in eventsB) {
       if (!eventsA[key] || !eventsA[key].listener) {
         const container = {}
-        container.handler = eventsB[key]
+        container.handlers = eventsB[key]
         container.listener = ($event) => {
-          const result = container.handler($event)
-          if (result instanceof Function) {
-            result($event)
+          for (const handler of container.handlers) {
+            const result = handler($event)
+            if (result instanceof Function) {
+              result($event)
+            }
           }
         }
         nodeA.el.addEventListener(key, container.listener)
         eventsA[key] = container
       } else {
-        eventsA[key].handler = eventsB[key]
+        eventsA[key].handlers = eventsB[key]
       }
     }
 
