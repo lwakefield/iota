@@ -118,7 +118,7 @@ export default class Patcher {
   }
   patchChildren(nodeA, nodeB) {
     const childrenA = nodeA.children
-    const childrenB = nodeB.children
+    const childrenB = nodeB.children.filter(v => !!v)
 
     const len = max(childrenA.length, childrenB.length)
 
