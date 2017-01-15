@@ -1,4 +1,5 @@
-import {ELEMENT_NODE, TEXT_NODE} from './constants'
+import {ELEMENT_NODE, TEXT_NODE, BOOLEAN_ATTRS} from './constants'
+import {setAttribute} from './dom'
 
 export function vnode (tagName, options = {}, children = []) {
   return {tagName, options, children, nodeType: ELEMENT_NODE}
@@ -29,7 +30,7 @@ export function createElement (node) {
     const el = document.createElement(node.tagName)
     const attrs = node.options.attributes || {}
     for (const key in attrs) {
-      el.setAttribute(key, attrs[key])
+      setAttribute(el, key, attrs[key])
     }
     return el
   } else if (node.nodeType === TEXT_NODE) {

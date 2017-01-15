@@ -1,6 +1,6 @@
 import Patcher from './patcher'
 import {observe, proxy} from './util'
-import {vnode, tnode, createElement} from './vdom'
+import {vnode, tnode, createElement, shallowCloneNode} from './vdom'
 import {replaceNode} from './dom'
 
 export const components = {}
@@ -47,7 +47,8 @@ export class Component {
     this.$el = rendered.el
     replaceNode(el, this.$el)
 
-    this._patcher = new Patcher(rendered)
+    this._patcher = new Patcher(shallowCloneNode(rendered))
+    this.update()
   }
   setProps(props) {
     this.$props = props

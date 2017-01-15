@@ -1,4 +1,4 @@
-import {FORM_ELS} from './constants'
+import {FORM_ELS, BOOLEAN_ATTRS} from './constants'
 // replace a with b
 export const replaceNode = (a, b) => a && b && a !== b &&
   a.parentNode && a.parentNode.replaceChild(b, a)
@@ -10,3 +10,12 @@ export const removeNode = (a) => a.parentNode
 
 const FORM_EL_REGEX = new RegExp(FORM_ELS.join('|'))
 export const isFormEl = node => FORM_EL_REGEX.test(node.tagName.toLowerCase())
+
+export function setAttribute (el, name, value) {
+  const isBoolAttr = BOOLEAN_ATTRS.indexOf(name) !== -1
+  if (isBoolAttr && (value === 'false' || !value)) {
+    el.removeAttribute(name)
+  } else {
+    el.setAttribute(name, value)
+  }
+}

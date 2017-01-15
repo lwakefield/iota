@@ -2,7 +2,7 @@ import {ELEMENT_NODE, TEXT_NODE} from './constants'
 import {createElement, getTagName, shallowCloneNode} from './vdom'
 import {max, swap} from './util'
 import {components} from './component'
-import {insertAfter, replaceNode, removeNode, isFormEl} from './dom'
+import {insertAfter, replaceNode, removeNode, isFormEl, setAttribute} from './dom'
 
 const isComponent = node => (
   node &&
@@ -74,11 +74,12 @@ export default class Patcher {
       }
     }
     for (const key in attrsB) {
-      if (attrsA[key] != attrsB[key]) {
+      if (attrsA[key] !== attrsB[key]) {
         if (key === 'value' && isFormEl(nodeA.el)) {
           nodeA.el.value = attrsB.value
+        } else {
+          setAttribute(nodeA.el, key, attrsB[key])
         }
-        nodeA.el.setAttribute(key, attrsB[key])
       }
     }
 
