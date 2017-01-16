@@ -1,0 +1,262 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Vdoom.js • TodoMVC</title>
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        flex-flow: column;
+
+        font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      }
+      h1 {
+        font-size: 100px;
+        font-weight: 100;
+        margin: 0;
+        text-align: center;
+      }
+      .row {
+        display: flex;
+        flex-direction: row;
+      }
+      .row--vcenter {
+        align-items: center;
+      }
+      .todoapp {
+        min-width: 230px;
+        max-width: 550px;
+        width: 100%;
+      }
+      .toggle-all {
+        appearance: none;
+        -webkit-appearance: none;
+        font-size: 22px;
+        transform: rotate(90deg);
+        border: none;
+        margin: 0;
+        outline: 0;
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;<Paste>
+      }
+      .toggle-all:not(:checked):before {
+        opacity: 0.5;
+      }
+      .toggle-all:before {
+        display: block;
+        content: '❯';
+      }
+      .new-todo {
+        width: 100%;
+        font-size: 24px;
+      }
+      .todo-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .todo {
+        display: flex;
+        flex-flow: row nowrap;
+        font-size: 24px;
+        align-items: center;
+        padding: 0.5rem 0;
+      }
+      .todo-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        font-size: 22px;
+        border: none;
+        margin: 0;
+        outline: 0;
+
+        width: 50px;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+      }
+      .todo-checkbox:after {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 30px;
+
+        content: ' ';
+      }
+      .todo-checkbox:checked:after {
+        content: '✔';
+
+        border: 1px solid #000;
+        border-radius: 100%;
+      }
+      .todo-label {
+        flex-grow: 1;
+      }
+      .todo-label--done {
+        text-decoration: line-through;
+      }
+      .todo-destroy {
+        visibility: hidden;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        width: 25px;
+        height: 25px;
+        background: none;
+        font-size: 24px;
+      }
+      .todo:hover .todo-destroy {
+        visibility: visible;
+      }
+      .todo-edit {
+        flex-grow: 1;
+        font-size: inherit;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+
+    <section class="todoapp">
+      <header class="header">
+        <h1>todos</h1>
+        <div class="row row--vcenter">
+          <input class="toggle-all" type="checkbox">
+          <input
+            class="new-todo"
+            autofocus
+            autocomplete="off"
+            placeholder="What needs to be done?"
+            value="${newTodo}"
+            @keyup="handleInput"
+          >
+        </div>
+      </header>
+
+      <main class="main">
+        <ul class="todo-list">
+          <li
+            class="todo"
+            i-for="todo of todos"
+          >
+            <input
+              class="todo-checkbox"
+              type="checkbox"
+              checked="${todo.completed}"
+              @change="updateTodos"
+            >
+
+            <label
+              class="
+              todo-label
+              ${todo.completed ? 'todo-label--done' : ''}
+              "
+              i-if='editingTodo !== todo'
+              @dblclick="edit(todo)"
+            >
+              ${todo.title}
+            </label>
+
+            <input
+              autofocus
+              class="todo-edit"
+              i-if='editingTodo === todo'
+              type="text"
+              value="${todo.title}"
+              @keyup="handleEditInput"
+            >
+            <button class="todo-destroy" @click="remove(todo)">&times;</button>
+          </li>
+        </ul>
+      </main>
+
+      <footer>
+        <span class="todo-count">
+          <strong>${ remaining() }</strong> item${remaining() > 1 ? 's' : ''} left
+        </span>
+      </footer>
+
+      <pre>${ JSON.stringify(todos, null, '  ') }</pre>
+
+      <footer class="info">
+        <p>Double-click to edit a todo</p>
+        <p>Written by <a href="https://iamlawrence.me">Lawrence Wakefield</a></p>
+        <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+      </footer>
+    </section>
+
+
+    <script src="../dist/vdoom.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+      function loadTodos () {
+        return JSON.parse(localStorage['todos'] || '[]')
+      }
+      function updateTodos (todos = []) {
+        localStorage['todos'] = JSON.stringify(todos)
+      }
+      function removeFromArray(arr, toRemove) {
+        arr.splice(arr.indexOf(toRemove), 1)
+      }
+
+      const app = Vdoom(document.querySelector('.todoapp'), {
+        data: {
+          todos: loadTodos(),
+          editingTodo: null,
+          newTodo: '',
+        },
+        methods: {
+          handleInput ($event) {
+            if ($event.key === 'Enter') {
+              this.todos.push({title: this.newTodo, completed: false})
+              this.newTodo = ''
+              updateTodos(this.todos)
+            }
+          },
+          handleEditInput ($event) {
+            if ($event.key === 'Enter') {
+              this.editingTodo = null
+              updateTodos(this.todos)
+            } else if ($event.key === 'Escape') {
+              this.editingTodo = null
+            }
+          },
+          remove (todo) {
+            removeFromArray(this.todos, todo)
+            updateTodos(this.todos)
+          },
+          edit (todo) {
+            this.editingTodo = todo
+          },
+          updateTodos () {
+            updateTodos(this.todos)
+          },
+          active () {
+            return (this.todos || []).filter(v => !v.completed)
+          },
+          completed () {
+            return (this.todos || []).filter(v => v.completed)
+          },
+          remaining () {
+            return this.active().length
+          },
+        }
+      })
+    </script>
+
+
+    <!-- <script src="node_modules/todomvc-common/base.js"></script> -->
+    <!-- <script src="node_modules/director/build/director.js"></script> -->
+    <!-- <script src="js/store.js"></script> -->
+    <!-- <script src="js/app.js"></script> -->
+    <!-- <script src="js/routes.js"></script> -->
+  </body>
+</html>

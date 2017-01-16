@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="event test vue" />
+<title>event test (vdoom)</title>
+</head>
+<body>
+  <div id="app">
+    <input type="text" value="${name}"/>
+    <p>${name}</p>
+    <ul>
+      <li i-for='m of messages'>
+        <span>${m}</span>
+        <button @click='dothing(m)'>thing</button>
+      </li>
+    </ul>
+  </div>
+
+  <script src="../dist/vdoom.js"></script>
+
+  <script type="text/javascript" charset="utf-8">
+    const app = Vdoom(document.querySelector('#app'), {
+      data: {
+        name: '',
+        messages: ['one', 'two', 'three']
+      },
+      methods: {
+        // dothing(m) {
+        //   console.log(m)
+        // }
+      }
+    })
+  </script>
+</body>
+</html>
+
+
