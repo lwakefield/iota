@@ -3,7 +3,7 @@ import {
   ELEMENT_NODE,
 } from './constants'
 import {arrToObj} from './util'
-import {isFormEl} from './dom'
+import {isFormEl, isBoolAttr} from './dom'
 
 export function codegen (node) {
   return new Function(
@@ -74,6 +74,8 @@ export function codegenOptions (node) {
       props.push(`${name.substr(1)}: ${value}`)
     } else if (name[0] === '@') {
       addEvent(name.substr(1), `$event => ${value}`)
+    } else if (isBoolAttr(name) && value === '') {
+      attrs.push(`${name}: true`)
     } else {
       attrs.push(`${name}: \`${value}\``)
     }
