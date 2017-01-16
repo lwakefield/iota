@@ -8,7 +8,7 @@ module.exports = function app(el, options = {}) {
   const component = new Component(options)
   const placeHolder = el.cloneNode(false)
   el.parentNode.replaceChild(placeHolder, el)
-  component.render = codegen(el, component)
+  component.render = codegen.call(component, el)
   component.mount(placeHolder)
   return component
 }

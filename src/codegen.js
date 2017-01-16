@@ -7,11 +7,12 @@ import {isFormEl, isBoolAttr} from './dom'
 import {tnode, vnode} from './vdom'
 import {attr, event} from './directives'
 
-export function codegen (node, scope = null) {
-  return (new Function(
-    'tnode', 'vnode', 'attr', 'event',
+export function codegen (node) {
+  const renderFn = new Function(
+    'tnode', 'vnode', 'attr', 'event', 'scope',
     `with (this) return ${codegenNode(node)}`
-  )).bind(scope, tnode, vnode, attr, event)
+  )
+  return renderFn.bind(this, tnode, vnode, attr, event)
 }
 
 export function codegenNode (node) {
