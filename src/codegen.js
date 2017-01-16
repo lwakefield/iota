@@ -48,20 +48,27 @@ export function codegenElementNode (node) {
 }
 
 export function codegenOptions (node) {
-  const [attrs, props, events] = [[], [], {}]
+  const props = []
+  const directives = []
   let key = null
-  function addEvent(key, fnString) {
-    if (!events[key]) events[key] = []
-    events[key].push(fnString)
+
+  function addDirective (key, val) {
+    directives.push(`${key}: ${val}`)
   }
 
   if (isFormEl(node)) {
     if (/\${.*}/.test(node.getAttribute('value'))) {
       const pointer = node.getAttribute('value').match(/\${(.*)}/)[1]
-      addEvent('input', `$event => ${pointer} = $event.target.value`)
+      addDirective(
+        '__formBinding',
+        `event('input', $event => ${pointer} = $event.target.value)`
+      )
     } else if (/\${.*}/.test(node.getAttribute('checked'))) {
       const pointer = node.getAttribute('checked').match(/\${(.*)}/)[1]
-      addEvent('change', `$event => ${pointer} = $event.target.checked`)
+      addDirective(
+        '__formBinding',
+        `event('change', $event => ${pointer} = $event.target.checked)`
+      )
     }
   }
 
@@ -73,11 +80,20 @@ export function codegenOptions (node) {
     } else if (name[0] === ':') {
       props.push(`${name.substr(1)}: ${value}`)
     } else if (name[0] === '@') {
-      addEvent(name.substr(1), `$event => ${value}`)
+      addDirective(
+        `'${name}'`,
+        `event('${name.substr(1)}', $event => ${value})`
+      )
     } else if (isBoolAttr(name) && value === '') {
-      attrs.push(`${name}: true`)
+      addDirective(
+        name,
+        `attr('${name}', true)`
+      )
     } else {
-      attrs.push(`${name}: \`${value}\``)
+      addDirective(
+        name,
+        `attr('${name}', \`${value}\`)`
+      )
     }
   }
 
@@ -87,13 +103,8 @@ export function codegenOptions (node) {
 
   const toAdd = []
   key && toAdd.push(key)
-  attrs.length && toAdd.push(`attributes: {${attrs.join(',')}}`)
+  directives.length && toAdd.push(`directives: {${directives.join(',')}}`)
   props.length && toAdd.push(`props: {${props.join(',')}}`)
-  Object.keys(events).length && toAdd.push(`events: {${
-    Object.keys(events)
-      .map(key => `${key}: [${events[key].join(',')}]`)
-      .join(',')
-  }}`)
 
   return `{${toAdd.join(',')}}`
 }

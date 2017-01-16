@@ -54,67 +54,42 @@ export default class Patcher {
       }
 
       component.update()
-      this.patchEvents(nodeA, nodeB)
-      this.patchAttributes(nodeA, nodeB)
+      this.patchDirectives(nodeA, nodeB)
     } else if (nodeA.nodeType === TEXT_NODE) {
       nodeA.el.textContent = nodeB.textContent
     } else if (nodeA.nodeType === ELEMENT_NODE) {
-      this.patchEvents(nodeA, nodeB)
-      this.patchAttributes(nodeA, nodeB)
+      this.patchDirectives(nodeA, nodeB)
       this.patchChildren(nodeA, nodeB)
     }
   }
-  patchAttributes(nodeA, nodeB) {
-    const attrsA = nodeA.options.attributes || {}
-    const attrsB = nodeB.options.attributes || {}
+  patchDirectives(nodeA, nodeB) {
+    const directivesA = nodeA.options.directives || {}
+    const directivesB = nodeB.options.directives || {}
 
-    for (const key in attrsA) {
-      if (!(key in attrsB)) {
-        nodeA.el.removeAttribute(key)
+
+    for (const key in directivesA) {
+      if (!(key in directivesB)) {
+        const dirA = directivesA[key]
+        dirA.instance.unbind(nodeA.el, dirA)
       }
     }
-    for (const key in attrsB) {
-      if (attrsA[key] !== attrsB[key]) {
-        if (key === 'value' && isFormEl(nodeA.el)) {
-          nodeA.el.value = attrsB.value
-        } else {
-          setAttribute(nodeA.el, key, attrsB[key])
-        }
-      }
-    }
+    for (const key in directivesB) {
+      const isBound = directivesA[key] && directivesA[key].instance
+      const directive = isBound ?
+        directivesA[key].instance :
+        new (directivesB[key].constructor)
 
-    nodeA.options.attributes = nodeB.options.attributes
-  }
-  patchEvents(nodeA, nodeB) {
-    const eventsA = nodeA.options.events || {}
-    const eventsB = nodeB.options.events || {}
-
-    for (const key in eventsA) {
-      if (!eventsB[key]) {
-        nodeA.el.removeEventListener(key, eventsA[key].listener)
-        delete eventsA[key]
-      }
-    }
-    for (const key in eventsB) {
-      if (!eventsA[key] || !eventsA[key].listener) {
-        const container = {}
-        container.handlers = eventsB[key]
-        container.listener = ($event) => {
-          for (const handler of container.handlers) {
-            const result = handler($event)
-            if (result instanceof Function) {
-              result($event)
-            }
-          }
-        }
-        nodeA.el.addEventListener(key, container.listener)
-        eventsA[key] = container
+      if (!isBound) {
+        directive.bind(nodeA.el, directivesB[key])
       } else {
-        eventsA[key].handlers = eventsB[key]
+        const oldVal = {name: directivesA[key].name, value: directivesA}
+        directive.update(nodeA.el, directivesB[key], oldVal)
       }
+
+      directivesB[key].instance = directive
     }
 
-    nodeA.options.events = eventsA
+    nodeA.options.directives = directivesB
   }
   patchChildren(nodeA, nodeB) {
     const childrenA = nodeA.children

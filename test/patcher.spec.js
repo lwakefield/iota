@@ -8,6 +8,7 @@ import {
   registerComponent,
   unregisterComponent,
 } from '../src/component'
+import {attr, event} from '../src/directives'
 import Patcher, {Index} from '../src/patcher'
 import {vnode, tnode} from '../src/vdom'
 import {htov, assertHtmlIsEqual, mockOnClass, unmockOnClass} from './util'
@@ -33,10 +34,12 @@ describe('Patcher', () => {
     beforeEach(() => {
       mockOnClass(Patcher, 'patchAttributes', sinon.spy())
       mockOnClass(Patcher, 'patchChildren', sinon.spy())
+      mockOnClass(Patcher, 'patchDirectives', sinon.spy())
     })
     after(() => {
       unmockOnClass(Patcher, 'patchAttributes')
       unmockOnClass(Patcher, 'patchChildren')
+      unmockOnClass(Patcher, 'patchDirectives')
     })
     it('patches an element', () => {
       const nodeA = htov('<div />')
@@ -44,7 +47,7 @@ describe('Patcher', () => {
       const patcher = new Patcher(nodeA)
       patcher.patch(nodeB)
       assertHtmlIsEqual(nodeA.el, '<div></div>')
-      expect(patcher.patchAttributes.calledWith(nodeA, nodeB)).to.be.true
+      expect(patcher.patchDirectives.calledWith(nodeA, nodeB)).to.be.true
       expect(patcher.patchChildren.calledWith(nodeA, nodeB)).to.be.true
       expect(patcher.nodeA.el).to.be.ok
     })
@@ -87,7 +90,82 @@ describe('Patcher', () => {
       })
     })
   })
-  describe('patchAttributes', () => {
+  describe('patchDirectives', () => {
+    const {patchDirectives} = (new Patcher())
+
+    class MockDirective {
+      constructor () {
+        this.bind = sinon.spy()
+        this.unbind = sinon.spy()
+        this.update = sinon.spy()
+      }
+    }
+
+    it('binds', () => {
+      const nodeA = htov('<div />')
+      const nodeB = vnode('div', {
+        directives: {
+          foo: {name: ':foo', value: 'bar', constructor: MockDirective},
+        }
+      })
+
+      patchDirectives(nodeA, nodeB)
+
+      expect(nodeA.options.directives).to.eql(nodeB.options.directives)
+      const {instance} = nodeA.options.directives.foo
+      expect(instance).is.ok
+      expect(instance.bind.calledOnce).is.true
+      expect(instance.bind.calledWith(nodeA.el, nodeB.options.directives.foo)).is.true
+    })
+
+    it('updates', () => {
+      const nodeA = htov('<div />')
+      nodeA.options.directives.foo = {
+        name: ':foo', value: 'bar', constructor: MockDirective, instance: new MockDirective()
+      }
+      const nodeB = vnode('div', {
+        directives: {
+          foo: {name: '#foo', value: 'bar', constructor: MockDirective},
+        }
+      })
+
+      const oldVal = nodeA.options.directives.foo
+      const {instance} = oldVal
+
+      patchDirectives(nodeA, nodeB)
+
+      expect(nodeA.options.directives).to.eql(nodeB.options.directives)
+      expect(nodeA.options.directives.foo.instance === instance).is.true
+      expect(instance.update.calledOnce).is.true
+      expect(instance.update.calledWith(
+        nodeA.el,
+        nodeB.options.directives.foo,
+        oldVal
+      ))
+    })
+    it('unbinds', () => {
+      const nodeA = htov('<div />')
+      nodeA.options.directives.foo = {
+        name: ':foo', value: 'bar', constructor: MockDirective, instance: new MockDirective()
+      }
+      const nodeB = vnode('div', {
+        directives: {}
+      })
+
+      const oldVal = nodeA.options.directives.foo
+      const {instance} = oldVal
+
+      patchDirectives(nodeA, nodeB)
+
+      expect(nodeA.options.directives).to.eql(nodeB.options.directives)
+      expect(instance.unbind.calledOnce).is.true
+      expect(instance.unbind.calledWith(
+        nodeA.el,
+        oldVal
+      ))
+    })
+  })
+  describe.skip('patchAttributes', () => {
     const patcher = new Patcher()
     const patchAttributes = patcher.patchAttributes
     it('adds attributes', () => {
@@ -410,7 +488,7 @@ describe('Patcher', () => {
       })
     })
   })
-  describe('patchEvents', () => {
+  describe.skip('patchEvents', () => {
     function setup (htmlForNodeA, nodeB) {
       const nodeA = htov(htmlForNodeA)
       const patcher = new Patcher()

@@ -2,6 +2,7 @@ import Patcher from './patcher'
 import {observe, proxy, objMap} from './util'
 import {vnode, tnode, createElement, shallowCloneNode} from './vdom'
 import {replaceNode} from './dom'
+import {attr, event} from './directives'
 
 export const components = {}
 
@@ -23,6 +24,8 @@ export class Component {
 
     this.vnode = vnode
     this.tnode = tnode
+    this.attr = attr
+    this.event = event
 
     proxy(this, this.$data)
     proxy(this, this.$methods)

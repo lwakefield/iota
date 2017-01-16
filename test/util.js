@@ -3,6 +3,7 @@ import {expect} from 'chai'
 import {ELEMENT_NODE, TEXT_NODE} from '../src/constants'
 import {arrToObj} from '../src/util'
 import {vnode, tnode} from '../src/vdom'
+import {attr} from '../src/directives'
 
 export const normalize = s => s.split('\n')
   .map(v => v.trim())
@@ -33,16 +34,20 @@ export function htov(html) {
 export function dtov (node) {
   if (node.nodeType === ELEMENT_NODE) {
     const tagName = node.tagName.toLowerCase()
-    const attributes = arrToObj(
+    const directives = arrToObj(
       Array.from(node.attributes),
-      ({name, value}) => ({[name]: value})
+      ({name, value}) => {
+        const result = {[name]: attr(name, value)}
+        result[name].instance = new (result[name].constructor)
+        return result
+      }
     )
-    const options = {attributes}
+
+    const options = {directives}
     // TODO make this more obvious in tests
-    if (attributes.key) {
+    if (directives.key) {
+      options.key = node.getAttribute('key')
       node.removeAttribute('key')
-      options.key = attributes.key
-      delete attributes.key
     }
     const children = Array.from(node.childNodes).map(dtov)
     const n = vnode(tagName, options, children)

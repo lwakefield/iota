@@ -3,7 +3,11 @@ import {expect} from 'chai'
 import sinon from 'sinon'
 import jsdom from 'jsdom'
 
-import { Event as EventDirective } from '../src/directive'
+import {assertHtmlIsEqual} from './util'
+import {
+  Event as EventDirective,
+  Attribute,
+} from '../src/directives'
 
 beforeEach(() => {
   const window = jsdom.jsdom().defaultView
@@ -39,3 +43,31 @@ describe('Event', () => {
   })
 })
 
+describe('Attribute', () => {
+  it('binds, updates and unbinds correctly', () => {
+    const attr = new Attribute()
+    const el = document.createElement('div')
+
+    attr.bind(el, {name: 'id', value: 'foo'})
+    assertHtmlIsEqual(
+      el,
+      `<div id="foo"></div>`
+    )
+
+    attr.update(
+      el,
+      {name: 'id', value: 'bar'},
+      {oldName: 'id', oldValue: 'foo'}
+    )
+    assertHtmlIsEqual(
+      el,
+      `<div id="bar"></div>`
+    )
+
+    attr.unbind(el, {name: 'id'})
+    assertHtmlIsEqual(
+      el,
+      `<div></div>`
+    )
+  })
+})
