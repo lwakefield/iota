@@ -47,6 +47,13 @@ export function arrToObj (arr, fn) {
   )
 }
 
+export function objMap (obj, fn) {
+  return Object.keys(obj).reduce(
+    (result, k) => Object.assign(result, {[k]: fn(obj[k], k)}),
+    {}
+  )
+}
+
 export const swap = (arr, a, b) => {
   if (!a || !b) return
   const [aIndex, bIndex] = [arr.indexOf(a), arr.indexOf(b)]

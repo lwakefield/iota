@@ -1,5 +1,5 @@
 import Patcher from './patcher'
-import {observe, proxy} from './util'
+import {observe, proxy, objMap} from './util'
 import {vnode, tnode, createElement, shallowCloneNode} from './vdom'
 import {replaceNode} from './dom'
 
@@ -12,21 +12,11 @@ export function unregisterComponent(name) {
   delete components[name]
 }
 
-// export function component(options = {}) {
-//   const {el, name} = options
-//   const component = class extends Component {
-//     constructor() {super(options)}
-//   }
-//   component.name = name
-//   component.prototype.render = Codegen.codegen(el)
-//   return component
-// }
-
 export class Component {
   constructor (options = {}) {
-    const {data = {}, methods} = options
+    const {data = {}, methods = {}} = options
     this.$data = observe(data, this.update.bind(this))
-    this.$methods = methods
+    this.$methods = objMap(methods, v => v.bind(this))
     this.$el = null
     this._patcher = null
     this.$props = {}
@@ -35,11 +25,7 @@ export class Component {
     this.tnode = tnode
 
     proxy(this, this.$data)
-    const $methods = {}
-    for (const name in methods) {
-      $methods[name] = methods[name].bind(this)
-    }
-    proxy(this, $methods)
+    proxy(this, this.$methods)
   }
   mount (el) {
     const rendered = this.render.call(this)
@@ -48,7 +34,7 @@ export class Component {
     replaceNode(el, this.$el)
 
     this._patcher = new Patcher(shallowCloneNode(rendered))
-    this.update()
+    this.update(rendered)
   }
   setProps(props) {
     this.$props = props
@@ -56,9 +42,7 @@ export class Component {
   render () {
     throw new Error('Not implemented')
   }
-  update () {
-    const rendered = this.render.call(this)
+  update (rendered = this.render()) {
     this._patcher.patch(rendered)
   }
 }
-
