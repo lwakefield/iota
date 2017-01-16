@@ -84,8 +84,8 @@ describe('Codegen', () => {
           attributes: {value: \`\${name}\`},
           events: {
             input: [
-              $event => handleInput,
-              $event => name = $event.target.value
+              $event => name = $event.target.value,
+              $event => handleInput
             ]
           }
         }`

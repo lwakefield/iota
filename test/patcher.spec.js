@@ -421,7 +421,7 @@ describe('Patcher', () => {
       const spy = sinon.spy()
       const [nodeA, nodeB, patcher] = setup(
         '<button></button>',
-        vnode('button', {events: {click: spy}})
+        vnode('button', {events: {click: [spy]}})
       )
 
       patcher.patchEvents(nodeA, nodeB)
@@ -429,7 +429,7 @@ describe('Patcher', () => {
       expect(eventsA).to.be.ok
       expect(eventsA.click).to.be.ok
       expect(eventsA.click.listener).to.be.ok
-      expect(eventsA.click.handler).to.eql(spy)
+      expect(eventsA.click.handlers).to.eql([spy])
 
       const clickEvent = new Event('click')
       nodeA.el.dispatchEvent(clickEvent)
@@ -459,23 +459,24 @@ describe('Patcher', () => {
       expect(listener.calledOnce).to.be.true
     })
 
-    it('adds an event listener', () => {
+    it('updates an event listener', () => {
+      const [spy1, spy2] = [sinon.spy(), sinon.spy()]
       const [nodeA, nodeB, patcher] = setup(
         '<button></button>',
-        vnode('button', {events: {click: sinon.spy()}})
+        vnode('button', {events: {click: [spy1]}})
       )
 
       patcher.patchEvents(nodeA, nodeB)
       nodeA.el.dispatchEvent(new Event('click'))
-      expect(nodeB.options.events.click.calledOnce).to.be.true
+      expect(spy1.calledOnce).to.be.true
 
-      const nodeC = vnode('button', {events: {click: sinon.spy()}})
+      const nodeC = vnode('button', {events: {click: [spy2]}})
 
       patcher.patchEvents(nodeA, nodeC)
-      expect(nodeA.options.events.click.handler).to.eql(nodeC.options.events.click)
+      expect(nodeA.options.events.click.handlers).to.eql([spy2])
       nodeA.el.dispatchEvent(new Event('click'))
-      expect(nodeC.options.events.click.calledOnce).to.be.true
-      expect(nodeB.options.events.click.calledOnce).to.be.true
+      expect(spy1.calledOnce).to.be.true
+      expect(spy2.calledOnce).to.be.true
     })
   })
 })
