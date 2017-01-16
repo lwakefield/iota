@@ -4,11 +4,14 @@ import {
 } from './constants'
 import {arrToObj} from './util'
 import {isFormEl, isBoolAttr} from './dom'
+import {tnode, vnode} from './vdom'
+import {attr, event} from './directives'
 
-export function codegen (node) {
-  return new Function(
+export function codegen (node, scope = null) {
+  return (new Function(
+    'tnode', 'vnode', 'attr', 'event',
     `with (this) return ${codegenNode(node)}`
-  )
+  )).bind(scope, tnode, vnode, attr, event)
 }
 
 export function codegenNode (node) {

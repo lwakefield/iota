@@ -22,11 +22,6 @@ export class Component {
     this._patcher = null
     this.$props = {}
 
-    this.vnode = vnode
-    this.tnode = tnode
-    this.attr = attr
-    this.event = event
-
     proxy(this, this.$data)
     proxy(this, this.$methods)
   }

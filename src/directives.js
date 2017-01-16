@@ -1,3 +1,5 @@
+import {isFormEl} from './dom'
+
 export const directives = {}
 
 export function registerdirective(directive) {
@@ -28,6 +30,9 @@ export class Attribute extends Directive {
   update (el, {name, value}, {oldValue}) {
     if (value !== oldValue) {
       el.setAttribute(name, value)
+      if (name === 'value' && isFormEl(el)) {
+        el.value = value
+      }
     }
   }
   unbind (el, {name}) {
