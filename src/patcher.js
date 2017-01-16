@@ -49,7 +49,7 @@ export default class Patcher {
       if (!component.$el) {
         component.mount(nodeA.el)
         nodeA.el = component.$el
-        this.patchAttributes(nodeA, nodeB)
+        this.patchDirectives(nodeA, nodeB)
         return
       }
 

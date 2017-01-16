@@ -84,17 +84,17 @@ describe('Codegen', () => {
     })
     it('generates events', () => {
       expect(cg('<p @input="handleInput"></p>'))
-        .to.eql(`{directives: {@input: event('input', $event => handleInput)}}`)
+        .to.eql(`{directives: {'@input': event('input', $event => handleInput)}}`)
 
       expect(cg('<p @input="handleInput(id)"></p>'))
-        .to.eql(`{directives: {@input: event('input', $event => handleInput(id))}}`)
+        .to.eql(`{directives: {'@input': event('input', $event => handleInput(id))}}`)
 
       assertCodeIsEqual(
         cg('<input @input="handleInput" value="${name}"></input>'),
         `{
           directives: {
             __formBinding: event('input', $event => name = $event.target.value),
-            @input: event('input', $event => handleInput),
+            '@input': event('input', $event => handleInput),
             value: attr('value', \`\${name}\`)
           }
         }`

@@ -32,12 +32,10 @@ after(() => {unregisterComponent('Foo')})
 describe('Patcher', () => {
   describe('patch', () => {
     beforeEach(() => {
-      mockOnClass(Patcher, 'patchAttributes', sinon.spy())
       mockOnClass(Patcher, 'patchChildren', sinon.spy())
       mockOnClass(Patcher, 'patchDirectives', sinon.spy())
     })
     after(() => {
-      unmockOnClass(Patcher, 'patchAttributes')
       unmockOnClass(Patcher, 'patchChildren')
       unmockOnClass(Patcher, 'patchDirectives')
     })
@@ -163,34 +161,6 @@ describe('Patcher', () => {
         nodeA.el,
         oldVal
       ))
-    })
-  })
-  describe.skip('patchAttributes', () => {
-    const patcher = new Patcher()
-    const patchAttributes = patcher.patchAttributes
-    it('adds attributes', () => {
-      const nodeA = htov('<div />')
-      const nodeB = vnode('div', {attributes: {id: 'foo'}})
-      patchAttributes(nodeA, nodeB)
-
-      assertHtmlIsEqual(nodeA.el, '<div id="foo"></div>')
-      expect(nodeA.attributes).to.eql(nodeB.attributes)
-    })
-    it('updates attributes', () => {
-      const nodeA = htov('<div id="foo" />')
-      const nodeB = vnode('div', {attributes: {id: 'bar'}})
-      patchAttributes(nodeA, nodeB)
-
-      assertHtmlIsEqual(nodeA.el, '<div id="bar"></div>')
-      expect(nodeA.attributes).to.eql(nodeB.attributes)
-    })
-    it('deletes attributes', () => {
-      const nodeA = htov('<div id="foo" />')
-      const nodeB = vnode('div')
-      patchAttributes(nodeA, nodeB)
-
-      assertHtmlIsEqual(nodeA.el, '<div></div>')
-      expect(nodeA.attributes).to.eql(nodeB.attributes)
     })
   })
   describe('patchChildren', () => {
@@ -486,75 +456,6 @@ describe('Patcher', () => {
           `
         )
       })
-    })
-  })
-  describe.skip('patchEvents', () => {
-    function setup (htmlForNodeA, nodeB) {
-      const nodeA = htov(htmlForNodeA)
-      const patcher = new Patcher()
-      return [nodeA, nodeB, patcher]
-    }
-
-    it('adds an event listener', () => {
-      const spy = sinon.spy()
-      const [nodeA, nodeB, patcher] = setup(
-        '<button></button>',
-        vnode('button', {events: {click: [spy]}})
-      )
-
-      patcher.patchEvents(nodeA, nodeB)
-      const eventsA = nodeA.options.events
-      expect(eventsA).to.be.ok
-      expect(eventsA.click).to.be.ok
-      expect(eventsA.click.listener).to.be.ok
-      expect(eventsA.click.handlers).to.eql([spy])
-
-      const clickEvent = new Event('click')
-      nodeA.el.dispatchEvent(clickEvent)
-      expect(spy.called).to.be.true
-      expect(spy.calledWith(clickEvent)).to.be.true
-    })
-
-    it('adds an event listener', () => {
-      const [nodeA, nodeB, patcher] = setup(
-        '<button></button>',
-        vnode('button')
-      )
-
-      const listener = sinon.spy()
-      nodeA.options = {
-        events: {
-          click: {listener}
-        }
-      }
-      nodeA.el.addEventListener('click', listener)
-      nodeA.el.dispatchEvent(new Event('click'))
-      expect(listener.calledOnce).to.be.true
-
-      patcher.patchEvents(nodeA, nodeB)
-      expect(nodeA.options.events).to.eql({})
-      nodeA.el.dispatchEvent(new Event('click'))
-      expect(listener.calledOnce).to.be.true
-    })
-
-    it('updates an event listener', () => {
-      const [spy1, spy2] = [sinon.spy(), sinon.spy()]
-      const [nodeA, nodeB, patcher] = setup(
-        '<button></button>',
-        vnode('button', {events: {click: [spy1]}})
-      )
-
-      patcher.patchEvents(nodeA, nodeB)
-      nodeA.el.dispatchEvent(new Event('click'))
-      expect(spy1.calledOnce).to.be.true
-
-      const nodeC = vnode('button', {events: {click: [spy2]}})
-
-      patcher.patchEvents(nodeA, nodeC)
-      expect(nodeA.options.events.click.handlers).to.eql([spy2])
-      nodeA.el.dispatchEvent(new Event('click'))
-      expect(spy1.calledOnce).to.be.true
-      expect(spy2.calledOnce).to.be.true
     })
   })
 })

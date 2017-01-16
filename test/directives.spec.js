@@ -22,14 +22,14 @@ describe('Event', () => {
     const event = new EventDirective()
     const el = document.createElement('button')
     const [spy1, spy2] = [sinon.spy(), sinon.spy()]
-    event.bind(el, {name: 'click', value: [spy1]})
+    event.bind(el, {name: 'click', value: spy1})
 
     el.dispatchEvent(new Event('click'))
     expect(spy1.calledOnce).to.be.true
 
     event.update(
       el,
-      {name: 'click', value: [spy2]}
+      {name: 'click', value: spy2}
     )
 
     el.dispatchEvent(new Event('click'))
