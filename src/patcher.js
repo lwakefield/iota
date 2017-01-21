@@ -93,18 +93,19 @@ export default class Patcher {
   }
   patchChildren(nodeA, nodeB) {
     const childrenA = nodeA.children
-    const childrenB = nodeB.children.filter(v => !!v)
-
-    const len = max(childrenA.length, childrenB.length)
+    const childrenB = nodeB.children
 
     const indexed = new Index()
-    for (let i = 0; i < childrenA.length; i++) {
-      const child = childrenA[i]
-      const key = getFullKey(child)
-      if (key) {
-        indexed.queue(key, child)
+    function index () {
+      for (let i = 0; i < childrenA.length; i++) {
+        const child = childrenA[i]
+        const key = getFullKey(child)
+        if (key) {
+          indexed.queue(key, child)
+        }
       }
     }
+    index()
 
     function reconcile (childA, childB) {
       const [keyA, keyB] = [getFullKey(childA), getFullKey(childB)]
@@ -126,9 +127,20 @@ export default class Patcher {
       return childA
     }
 
-    for (let i = 0; i < len; i++) {
-      childrenA[i] = reconcile(childrenA[i], childrenB[i])
-      const [childA, childB] = [childrenA[i], childrenB[i]]
+    let [indexA, indexB] = [0, 0]
+    const [lenA, lenB] = [childrenA.length, childrenB.length]
+    function next () {
+      indexA++
+      indexB++
+      while (indexB < lenB && !childrenB[indexB]) indexB++
+    }
+
+    const newChildrenA = []
+
+    while (indexA < lenA || indexB < lenB) {
+      const childB = childrenB[indexB]
+      const childA = reconcile(childrenA[indexA], childB)
+      childA && newChildrenA.push(childA)
 
       if (!childA && childB) throw new Error('could not reconcile nodeA')
 
@@ -136,10 +148,10 @@ export default class Patcher {
         childA.el = createElement(childA)
       }
       if (childA && childA.el && !childA.el.parentNode) {
-        if (i > 0) {
+        if (indexA > 0) {
           // This happens when we remove a keyed node earlier in the loop
           // ie. case 2 in reconcile
-          insertAfter(childrenA[i - 1].el, childA.el)
+          insertAfter(newChildrenA[indexA - 1].el, childA.el)
         } else {
           // This happens if childA did not exist initially, we have reconciled,
           // but not added it to the dom yet
@@ -148,9 +160,10 @@ export default class Patcher {
       }
 
       childA && this.patch(childA, childB)
+      next()
     }
 
-    nodeA.children = childrenA.slice(0, childrenB.length)
+    nodeA.children = newChildrenA
   }
 }
 
