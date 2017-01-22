@@ -1,24 +1,20 @@
 export function observe (obj, fn) {
+  if (!obj) return obj
   if (obj.__observer__) return obj.__observer__
-
 
   const proxy = new Proxy(obj, {
     set (target, property, val) {
-      target[property] = val instanceof Object
-        ? observe(val, fn)
-        : val
+      target[property] = val
       fn()
       return true
+    },
+    get (target, property) {
+      const result = target[property]
+      return typeof result === 'object' ?
+        observe(result, fn) :
+        result
     }
   })
-
-  // We should probably do this after the proxying so we don't modify the
-  // original object
-  for (const key in obj) {
-    if (obj[key] instanceof Object) {
-      obj[key] = observe(obj[key], fn)
-    }
-  }
 
   Object.defineProperty(proxy, '__observer__', {value: proxy})
   return proxy
