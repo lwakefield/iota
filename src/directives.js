@@ -1,4 +1,4 @@
-import {isFormEl} from './dom'
+import {isFormEl, isBoolAttr} from './dom'
 
 export const directives = {}
 
@@ -28,7 +28,11 @@ export class Attribute extends Directive {
     el.setAttribute(name, value)
   }
   update (el, {name, value}, {oldValue}) {
-    if (value !== oldValue) {
+    if (value === oldValue) return
+
+    if (isBoolAttr(name) && (value === 'false' || !value)) {
+      el.removeAttribute(name)
+    } else {
       el.setAttribute(name, value)
       if (name === 'value' && isFormEl(el)) {
         el.value = value
