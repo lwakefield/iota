@@ -10,12 +10,28 @@
         flex-flow: column;
 
         font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-weight: lighter;
+        letter-spacing: 0.1rem;
+        background: #f5f5f5;
+        color: #4d4d4d;
       }
       h1 {
-        font-size: 100px;
+        font-size: 8rem;
         font-weight: 100;
         margin: 0;
         text-align: center;
+      }
+      ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      button,
+      input {
+        font: inherit;
+        font-style: inherit;
+        color: inherit;
+        letter-spacing: inherit;
       }
       .row {
         display: flex;
@@ -24,10 +40,25 @@
       .row--vcenter {
         align-items: center;
       }
-      .todoapp {
+      .app {
+        border: 1px solid #ddd;
         min-width: 230px;
         max-width: 550px;
         width: 100%;
+        background-color: #fff;
+      }
+      .app-header {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #ddd;
+      }
+      .app-header input[type='text'] {
+        border: none;
+        width: 100%;
+        font-size: 24px;
+        outline: none;
+      }
+      .app-footer {
+        justify-content: space-between;
       }
       .toggle-all {
         appearance: none;
@@ -51,10 +82,6 @@
         display: block;
         content: '❯';
       }
-      .new-todo {
-        width: 100%;
-        font-size: 24px;
-      }
       .todo-list {
         list-style: none;
         margin: 0;
@@ -66,6 +93,7 @@
         font-size: 24px;
         align-items: center;
         padding: 0.5rem 0;
+        border-bottom: 1px solid #ddd;
       }
       .todo-checkbox {
         appearance: none;
@@ -88,30 +116,35 @@
         align-items: center;
         width: 30px;
         height: 30px;
+        border: 1px solid #ededed;
+        color: #5dc2af;
+        border-radius: 100%;
 
         content: ' ';
       }
       .todo-checkbox:checked:after {
         content: '✔';
-
-        border: 1px solid #000;
-        border-radius: 100%;
       }
       .todo-label {
         flex-grow: 1;
+        transition: all 0.2s ease;
       }
       .todo-label--done {
         text-decoration: line-through;
+        color: #ccc;
       }
       .todo-destroy {
         visibility: hidden;
         margin: 0;
         padding: 0;
         border: 0;
-        width: 25px;
-        height: 25px;
+        width: 40px;
+        height: 40px;
         background: none;
         font-size: 24px;
+        line-height: 1;
+        color: #cc9a9a;
+        font-size: 40px;
       }
       .todo:hover .todo-destroy {
         visibility: visible;
@@ -121,18 +154,49 @@
         font-size: inherit;
         border: none;
       }
+      .app-footer {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+      .filters li {
+        padding: 0 0.1rem;
+      }
+      .btn {
+        color: inherit;
+        font-size: inherit;
+        background: none;
+        text-decoration: none;
+        border: 1px solid transparent;
+        border-radius: 2px;
+        padding: 0.2rem 0.5rem;
+        cursor: pointer;
+      }
+      .btn:hover {
+        border: 1px solid #ddd;
+      }
+      .btn--selected {
+        border: 1px solid #ccc;
+      }
+
+      .info {
+        font-size: 0.8rem;
+        text-align: center;
+      }
+      .info p {
+        margin: 0.5rem;
+      }
     </style>
   </head>
   <body>
 
-    <section class="todoapp">
-      <header class="header">
-        <h1>todos</h1>
+    <h1>todos</h1>
+
+    <section class="app">
+      <header class="app-header">
         <div class="row row--vcenter">
-          <input class="toggle-all" type="checkbox">
+          <input class="toggle-all" type="checkbox" @click="toggleAll">
           <input
-            class="new-todo"
-            autofocus
+            type="text"
             autocomplete="off"
             placeholder="What needs to be done?"
             value="${newTodo}"
@@ -145,7 +209,7 @@
         <ul class="todo-list">
           <li
             class="todo"
-            i-for="todo of todos"
+            i-for="todo of filtered()"
           >
             <input
               class="todo-checkbox"
@@ -166,32 +230,57 @@
             </label>
 
             <input
-              autofocus
+              focus
               class="todo-edit"
               i-if='editingTodo === todo'
               type="text"
               value="${todo.title}"
               @keyup="handleEditInput"
+              @blur="editingTodo = null"
             >
             <button class="todo-destroy" @click="remove(todo)">&times;</button>
           </li>
         </ul>
       </main>
 
-      <footer>
+      <footer class="app-footer row row--vcenter">
         <span class="todo-count">
-          <strong>${ remaining() }</strong> item${remaining() > 1 ? 's' : ''} left
+          ${ remaining() } item${remaining() > 1 ? 's' : ''} left
         </span>
-      </footer>
 
-      <pre>${ JSON.stringify(todos, null, '  ') }</pre>
+        <ul class="filters row">
+          <li>
+            <a
+              class="btn ${visibility === 'all' ? 'btn--selected' : ''}"
+              href="#/all"
+            >All</a>
+          </li>
+          <li>
+            <a
+              class="btn ${visibility === 'active' ? 'btn--selected' : ''}"
+              href="#/active"
+            >Active</a>
+          </li>
+          <li>
+            <a
+              class="btn ${visibility === 'completed' ? 'btn--selected' : ''}"
+              href="#/completed"
+            >Completed</a>
+          </li>
+        </ul>
 
-      <footer class="info">
-        <p>Double-click to edit a todo</p>
-        <p>Written by <a href="https://iamlawrence.me">Lawrence Wakefield</a></p>
-        <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+        <button
+          class="btn"
+          @click="todos = active()"
+        >Clear Completed</button>
       </footer>
     </section>
+
+    <footer class="info">
+      <p>Double-click to edit a todo</p>
+      <p>Written by <a href="https://iamlawrence.me">Lawrence Wakefield</a></p>
+      <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+    </footer>
 
 
     <script src="../dist/vdoom.js"></script>
@@ -207,13 +296,32 @@
         arr.splice(arr.indexOf(toRemove), 1)
       }
 
-      const app = Vdoom(document.querySelector('.todoapp'), {
+      class Focus extends Vdoom.Directive {
+        bind (el) {
+          el.focus()
+        }
+      }
+      Vdoom.registerDirective(Focus)
+
+      const app = Vdoom(document.querySelector('.app'), {
         data: {
           todos: loadTodos(),
           editingTodo: null,
           newTodo: '',
+          visibility: 'all',
         },
         methods: {
+          toggleAll () {
+            if (this.active().length) {
+              this.todos.forEach(v => {
+                v.completed = true
+              })
+            } else {
+              this.todos.forEach(v => {
+                v.completed = false
+              })
+            }
+          },
           handleInput ($event) {
             if ($event.key === 'Enter') {
               this.todos.push({title: this.newTodo, completed: false})
@@ -239,17 +347,35 @@
           updateTodos () {
             updateTodos(this.todos)
           },
+          filtered () {
+            return this[this.visibility]()
+          },
+          all () {
+            return this.todos
+          },
           active () {
-            return (this.todos || []).filter(v => !v.completed)
+            return this.todos.filter(v => !v.completed)
           },
           completed () {
-            return (this.todos || []).filter(v => v.completed)
+            return this.todos.filter(v => v.completed)
           },
           remaining () {
             return this.active().length
           },
         }
       })
+
+      function onHashChange() {
+        const visibility = window.location.hash.replace(/#\/?/, '')
+        if (['all', 'active', 'completed'].includes(visibility)) {
+          app.visibility = visibility
+        } else {
+          window.location.hash = ''
+          app.visibility = 'all'
+        }
+      }
+      window.addEventListener('hashchange', onHashChange)
+      onHashChange()
     </script>
 
 
