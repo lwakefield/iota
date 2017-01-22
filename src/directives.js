@@ -2,11 +2,15 @@ import {isFormEl, isBoolAttr} from './dom'
 
 export const directives = {}
 
-export function registerdirective(directive) {
-  directives[directive.name] = directive
+export function registerDirective(directive) {
+  directives[directive.name.toLowerCase()] = directive
 }
-export function unregisterdirective(name) {
-  delete directives[name]
+export function unregisterDirective(directiveOrName) {
+  if (directiveOrName instanceof String) {
+    delete directives[name]
+  } else {
+    delete directives[(directiveOrName.name || '').toLowerCase()]
+  }
 }
 
 export default class Directive {

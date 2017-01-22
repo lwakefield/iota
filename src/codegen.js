@@ -5,14 +5,27 @@ import {
 import {arrToObj} from './util'
 import {isFormEl, isBoolAttr} from './dom'
 import {tnode, vnode} from './vdom'
-import {attr, event} from './directives'
+import {
+  attr,
+  event,
+  directives as globalDirectives
+} from './directives'
 
 export function codegen (node) {
-  const renderFn = new Function(
-    'tnode', 'vnode', 'attr', 'event', 'scope',
-    `with (this) return ${codegenNode(node)}`
+  return sandbox(
+    codegenNode(node),
+    Object.assign({}, {tnode, vnode, attr, event}, globalDirectives),
+    this
   )
-  return renderFn.bind(this, tnode, vnode, attr, event)
+}
+
+export function sandbox(code, globals, scope) {
+  const keys = Object.keys(globals)
+  const values = keys.map(k => globals[k])
+  return new Function(
+    ...Object.keys(globals),
+    `with (this) return ${code}`
+  ).bind(scope, ...values)
 }
 
 export function codegenNode (node) {
@@ -87,6 +100,12 @@ export function codegenOptions (node) {
       addDirective(
         `'${name}'`,
         `event('${name.substr(1)}', $event => ${value})`
+      )
+    } else if (globalDirectives[name]) {
+      const directiveConstructor = globalDirectives[name].name
+      addDirective(
+        name,
+        `{name: '${name}', value: ${value || undefined}, constructor: ${directiveConstructor}}`
       )
     } else if (isBoolAttr(name) && value === '') {
       addDirective(

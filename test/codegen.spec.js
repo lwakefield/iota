@@ -11,7 +11,12 @@ import {
   codegenNode,
 } from '../src/codegen'
 import {vnode, tnode} from '../src/vdom'
-import {attr, event} from '../src/directives'
+import Directive, {
+  attr,
+  event,
+  registerDirective,
+  unregisterDirective,
+} from '../src/directives'
 import {
   htoe,
   assertCodeIsEqual,
@@ -99,6 +104,17 @@ describe('Codegen', () => {
           }
         }`
       )
+    })
+    it('generates directives', () => {
+      class Foo extends Directive {}
+      registerDirective(Foo)
+
+      expect(cg('<p foo></p>'))
+        .to.eql(`{directives: {foo: {name: 'foo', value: undefined, constructor: Foo}}}`)
+      expect(cg('<p foo="bar"></p>'))
+        .to.eql(`{directives: {foo: {name: 'foo', value: bar, constructor: Foo}}}`)
+
+      unregisterDirective(Foo)
     })
   })
   describe('codegenTextNode', () => {
