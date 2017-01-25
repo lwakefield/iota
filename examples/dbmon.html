@@ -30,13 +30,13 @@
   <script src="./memory-stats.js"></script>
   <script src="./monitor.js"></script>
 
-  <link rel="stylesheet" href="./style.css" type="text/css">
+  <link rel="stylesheet" href="./dbmon.css" type="text/css">
 
   <script type="text/javascript" charset="utf-8">
     const app = Vdoom(document.querySelector('#app'), {data: {databases: []}})
 
     function loadsamples () {
-        app.databases = ENV.generateData().toArray();
+        app.databases = ENV.generateData(true).toArray();
         Monitoring.renderRate.ping();
         setTimeout(loadsamples, 1);
     }
