@@ -12,9 +12,10 @@ import {
 } from './directives'
 
 export function codegen (node) {
+  const code = codegenNode(node)
   return sandbox(
-    codegenNode(node),
-    Object.assign({}, {tnode, vnode, attr, event}, globalDirectives),
+    code,
+    Object.assign({}, {tnode, vnode, attr, event, loop}, globalDirectives),
     this
   )
 }
@@ -23,9 +24,18 @@ export function sandbox(code, globals, scope) {
   const keys = Object.keys(globals)
   const values = keys.map(k => globals[k])
   return new Function(
-    ...Object.keys(globals),
+    ...keys,
     `with (this) return ${code}`
   ).bind(scope, ...values)
+}
+
+function loop (arr, fn) {
+  const len = arr.length
+  const result = new Array(len)
+  for (let i = 0; i < len; i++) {
+    result[i] = fn(arr[i], i)
+  }
+  return result
 }
 
 export function codegenNode (node) {
@@ -59,7 +69,7 @@ export function codegenElementNode (node) {
   }
   if (attrs['i-for' ]) {
     const [, local, from] = attrs['i-for'].match(/(.*) of (.*)/)
-    code = `...${from}.map((${local}, $index) => ${code})`
+    code = `...loop(${from}, (${local}, $index) => ${code})`
   }
   return code
 }
