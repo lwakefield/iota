@@ -40,4 +40,14 @@ describe('observe', () => {
     foo.bar.baz.qux = 2
     expect(spy.calledTwice).to.be.true
   })
+  it('sets from an unobserved path', () => {
+    const spy = sinon.spy()
+    const foo = observe(
+      {arr: [{bar: 2}]},
+      spy
+    )
+
+    foo.baz = foo.arr[0]
+    expect(spy.calledOnce).to.be.true
+  })
 })

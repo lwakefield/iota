@@ -10,7 +10,7 @@ export function observe (obj, fn) {
     },
     get (target, property) {
       const result = target[property]
-      return typeof result === 'object' ?
+      return typeof result === 'object' && property !== '__observer__' ?
         observe(result, fn) :
         result
     }
