@@ -7,11 +7,11 @@ import {
   codegenTextNode,
   codegenChildren,
   codegenElementNode,
-} from '../src/codegen'
+} from '../../src/codegen'
 import Directive, {
   registerDirective,
   unregisterDirective,
-} from '../src/directives'
+} from '../../src/directives'
 import {htoe} from './util'
 
 const assertCode = code => expect(beautify.js(code)).toMatchSnapshot()

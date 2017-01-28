@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import { observe } from '../src/util'
+import { observe } from '../../src/util'
 
 describe('observe', () => {
   it('is notified correctly', () => {

@@ -5,9 +5,9 @@ import {
   Component,
   registerComponent,
   unregisterComponent,
-} from '../src/component'
-import Patcher, {Index} from '../src/patcher'
-import {vnode, tnode} from '../src/vdom'
+} from '../../src/component'
+import Patcher, {Index} from '../../src/patcher'
+import {vnode, tnode} from '../../src/vdom'
 import {
   htov,
   spy,

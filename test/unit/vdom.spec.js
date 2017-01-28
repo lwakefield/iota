@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import {vnode, tnode, createElement} from '../src/vdom'
+import {vnode, tnode, createElement} from '../../src/vdom'
 
 describe('tnode', () => {
   it('instantiates correctly with no params', () => {

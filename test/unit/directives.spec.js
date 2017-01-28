@@ -3,7 +3,7 @@ import beautify from 'js-beautify'
 import {
   Event as EventDirective,
   Attribute,
-} from '../src/directives'
+} from '../../src/directives'
 
 const assertCode = codeOrNode => expect(
   beautify.html(typeof codeOrNode === 'string' ? codeOrNode : codeOrNode.outerHTML)

@@ -1,10 +1,10 @@
 /* eslint-env jest */
 import {expect} from 'chai'
 
-import {ELEMENT_NODE, TEXT_NODE} from '../src/constants'
-import {arrToObj} from '../src/util'
-import {vnode, tnode} from '../src/vdom'
-import {attr} from '../src/directives'
+import {ELEMENT_NODE, TEXT_NODE} from '../../src/constants'
+import {arrToObj} from '../../src/util'
+import {vnode, tnode} from '../../src/vdom'
+import {attr} from '../../src/directives'
 
 export const normalize = s => s.split('\n')
   .map(v => v.trim())
