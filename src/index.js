@@ -1,4 +1,4 @@
-import {codegen} from './codegen'
+import {codegen, codegenNode} from './codegen'
 import {Component} from './component'
 import Directive, {
   registerDirective,
@@ -8,15 +8,27 @@ import Directive, {
 // TODO: change update() function name, because components might want to use
 //       that name...
 
-function Vdoom (el, options = {}) {
-  const component = new Component(options)
-  const placeHolder = el.cloneNode(false)
-  el.parentNode.replaceChild(placeHolder, el)
-  component.render = codegen.call(component, el)
-  component.mount(placeHolder)
-  return component
-}
+class Vdoom {
+  constructor (el, options = {}) {
+    const app = new (Vdoom.component(el, options))
+    app.mount(el)
+    return app
+  }
 
+  static component (el, options = {}) {
+    const isTemplate = el.tagName.toLowerCase() === 'template'
+
+    const root = isTemplate ?
+      el.content.cloneNode(true) :
+      el.cloneNode(true)
+
+    return function () {
+      const comp = new Component(options)
+      comp.render = codegen.call(comp, root)
+      return comp
+    }
+  }
+}
 Vdoom.registerDirective = registerDirective
 Vdoom.unregisterDirective = unregisterDirective
 Vdoom.Directive = Directive

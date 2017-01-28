@@ -303,7 +303,7 @@
       }
       Vdoom.registerDirective(Focus)
 
-      const app = Vdoom(document.querySelector('.app'), {
+      const app = new Vdoom(document.querySelector('.app'), {
         data: {
           todos: loadTodos(),
           editingTodo: null,
