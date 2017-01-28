@@ -1,6 +1,5 @@
-/* eslint-env mocha */
-import jsdom from 'jsdom'
-import {expect} from 'chai'
+/* eslint-env jest */
+import beautify from 'js-beautify'
 
 import {
   codegen,
@@ -8,26 +7,14 @@ import {
   codegenTextNode,
   codegenChildren,
   codegenElementNode,
-  codegenNode,
 } from '../src/codegen'
-import {vnode, tnode} from '../src/vdom'
 import Directive, {
-  attr,
-  event,
   registerDirective,
   unregisterDirective,
 } from '../src/directives'
-import {
-  htoe,
-  assertCodeIsEqual,
-} from './util'
+import {htoe} from './util'
 
-beforeEach(() => {
-  const window = jsdom.jsdom().defaultView
-  const document = window.document
-  global['window'] = window
-  global['document'] = document
-})
+const assertCode = code => expect(beautify.js(code)).toMatchSnapshot()
 
 describe('Codegen', () => {
   describe('codegen', () => {
@@ -43,7 +30,7 @@ describe('Codegen', () => {
         </div>
       `)
       const app = codegen(root)
-      expect(app).instanceOf(Function)
+      expect(app).toBeInstanceOf(Function)
 
       // const rendered = app.call({
       //   vnode,
@@ -70,119 +57,72 @@ describe('Codegen', () => {
       // )
     })
   })
+
   describe('codegenOptions', () => {
     const cg = html => codegenOptions(htoe(html))
+
     it('generates multiple attributes', () => {
-      assertCodeIsEqual(
-        cg('<p id="foo" class="class1 class2 ${class3}"></p>'),
-        `{
-          directives: {
-            id: attr('id', \`foo\`),
-            class: attr('class', \`class1 class2 \${class3}\`)
-          }
-        }`
-      )
+      assertCode(cg('<p id="foo" class="class1 class2 ${class3}"></p>'))
     })
     it('generates props', () => {
-      expect(cg('<p :foo="foobar"></p>'))
-        .to.eql('{props: {foo: foobar}}')
+      assertCode(cg('<p :foo="foobar"></p>'))
     })
     it('generates events', () => {
-      expect(cg('<p @input="handleInput"></p>'))
-        .to.eql(`{directives: {'@input': event('input', $event => handleInput)}}`)
-
-      expect(cg('<p @input="handleInput(id)"></p>'))
-        .to.eql(`{directives: {'@input': event('input', $event => handleInput(id))}}`)
-
-      assertCodeIsEqual(
-        cg('<input @input="handleInput" value="${name}"></input>'),
-        `{
-          directives: {
-            __formBinding: event('input', $event => name = $event.target.value),
-            '@input': event('input', $event => handleInput),
-            value: attr('value', \`\${name}\`)
-          }
-        }`
-      )
+      assertCode(cg('<p @input="handleInput"></p>'))
+      assertCode(cg('<p @input="handleInput(id)"></p>'))
+      assertCode(cg('<input @input="handleInput" value="${name}"></input>'))
     })
     it('generates directives', () => {
       class Foo extends Directive {}
       registerDirective(Foo)
 
-      expect(cg('<p foo></p>'))
-        .to.eql(`{directives: {foo: {name: 'foo', value: undefined, constructor: Foo}}}`)
-      expect(cg('<p foo="bar"></p>'))
-        .to.eql(`{directives: {foo: {name: 'foo', value: bar, constructor: Foo}}}`)
+      assertCode(cg('<p foo></p>'))
+      assertCode(cg('<p foo="bar"></p>'))
 
       unregisterDirective(Foo)
     })
   })
+
   describe('codegenTextNode', () => {
     it('generates tnode', () => {
       const t = htoe('foo ${bar}')
-      expect(codegenTextNode(t)).to.eql('tnode(`foo ${bar}`)')
+      assertCode(codegenTextNode(t))
     })
   })
+
   describe('codegenChildren', () => {
     it('generates children', () => {
       const el = htoe('<div><p></p><span></span><h1></h1></div>')
-      const code = codegenChildren(el)
-      expect(code).to.eql(
-        `[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])]`
-      )
+      assertCode(codegenChildren(el))
     })
   })
+
   describe('codegenElement', () => {
     it('generates for an element with no children and no attributes', () => {
-      const el = htoe('<div/>')
-      expect(codegenElementNode(el)).to.eql(`vnode('div',{},[])`)
+      assertCode(codegenElementNode(htoe('<div />')))
     })
     it('generates for an element with attributes and no children', () => {
       const el = htoe(
         '<div id="foo" class="class1 class2 ${class3}"/>'
       )
       const code = codegenElementNode(el)
-      assertCodeIsEqual(
-        code,
-        `vnode(
-          'div',
-          {
-            directives: {
-              id: attr('id', \`foo\`),
-              class: attr('class', \`class1 class2 \${class3}\`)
-            }
-          },
-          []
-        )`
-      )
+      assertCode(code)
     })
     it('generates for an element with children and no attributes', () => {
       const el = htoe('<div><p></p><span></span><h1></h1></div>')
-      const code = codegenElementNode(el)
-      expect(code).to.eql(
-        "vnode('div',{},[vnode('p',{},[]),vnode('span',{},[]),vnode('h1',{},[])])"
-      )
+      assertCode(codegenElementNode(el))
     })
     it('generates for an element with i-if', () => {
       const el = htoe('<div i-if="toggle" />')
-      const code = codegenElementNode(el)
-      expect(code).to.eql(
-        "toggle ? vnode('div',{},[]) : null"
-      )
+      assertCode(codegenElementNode(el))
     })
     it('generates for an element with i-for', () => {
       const el = htoe('<div i-for="val of vals" />')
-      const code = codegenElementNode(el)
-      expect(code).to.eql(
-        "...vals.map((val, $index) => vnode('div',{key: $index},[]))"
-      )
+      assertCode(codegenElementNode(el))
     })
     it('generates for an element with i-for and i-if', () => {
       const el = htoe('<div i-for="val of vals" i-if="toggle" />')
-      const code = codegenElementNode(el)
-      expect(code).to.eql(
-        "...vals.map((val, $index) => toggle ? vnode('div',{key: $index},[]) : null)"
-      )
+      assertCode(codegenElementNode(el))
     })
     it('generates for an element with children and attributes', () => {
       const el = htoe(
@@ -190,26 +130,7 @@ describe('Codegen', () => {
           <p></p><span></span><h1></h1>
         </div>`
       )
-      const code = codegenElementNode(el)
-      assertCodeIsEqual(
-        code,
-        `
-        vnode(
-          'div',
-          {
-            directives: {
-              id: attr('id', \`foo\`),
-              class: attr('class', \`class1 class2 \${class3}\`)
-            }
-          },
-          [
-            vnode('p',{},[]),
-            vnode('span',{},[]),
-            vnode('h1',{},[])
-          ]
-        )
-        `
-      )
+      assertCode(codegenElementNode(el))
     })
   })
 })

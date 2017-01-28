@@ -29,7 +29,7 @@ export function attr(name, value) {
 
 export class Attribute extends Directive {
   bind (el, {name, value}) {
-    el.setAttribute(name, value)
+    this.update(el, {name, value}, {})
   }
   update (el, {name, value}, {oldValue}) {
     if (value === oldValue) return
@@ -43,8 +43,8 @@ export class Attribute extends Directive {
       }
     }
   }
-  unbind (el, {name}) {
-    el.removeAttribute(name)
+  unbind (el, {oldName}) {
+    el.removeAttribute(oldName)
   }
 }
 
@@ -67,7 +67,7 @@ export class Event extends Directive {
   update (el, {value}) {
     this.handler = value
   }
-  unbind(el, {name}) {
-    el.removeEventListener(name, this.listener)
+  unbind(el, {oldName}) {
+    el.removeEventListener(oldName, this.listener)
   }
 }

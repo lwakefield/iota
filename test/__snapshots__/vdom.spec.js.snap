@@ -1,0 +1,15 @@
+exports[`createElement creates a vnode with attributes 1`] = `"<div id=\"foo\" class=\"bar\"></div>"`;
+
+exports[`tnode instantiates correctly with no params 1`] = `
+Object {
+  "nodeType": 3,
+  "textContent": undefined,
+}
+`;
+
+exports[`tnode instantiates correctly with string param 1`] = `
+Object {
+  "nodeType": 3,
+  "textContent": "foo",
+}
+`;

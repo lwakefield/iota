@@ -1,0 +1,5 @@
+exports[`Attribute binds, updates and unbinds correctly 1`] = `"<div id=\"foo\"></div>"`;
+
+exports[`Attribute binds, updates and unbinds correctly 2`] = `"<div id=\"bar\"></div>"`;
+
+exports[`Attribute binds, updates and unbinds correctly 3`] = `"<div></div>"`;

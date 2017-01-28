@@ -1,24 +1,20 @@
-/* eslint-env mocha */
-import {expect} from 'chai'
-
+/* eslint-env jest */
 import {vnode, tnode, createElement} from '../src/vdom'
-import {assertHtmlIsEqual, htoe} from './util'
 
 describe('tnode', () => {
   it('instantiates correctly with no params', () => {
-    expect(tnode()).to.eql({nodeType: 3, textContent: undefined})
+    expect(tnode()).toMatchSnapshot()
   })
   it('instantiates correctly with string param', () => {
-    expect(tnode('foo')).to.eql({nodeType: 3, textContent: 'foo'})
+    expect(tnode('foo')).toMatchSnapshot()
   })
 })
 
 describe('createElement', () => {
   it('creates a vnode with attributes', () => {
-    assertHtmlIsEqual(
-      createElement(vnode('div', {attributes: {id: 'foo', class: 'bar'}})),
-      htoe('<div id="foo" class="bar"></div>')
-    )
+    expect(
+      createElement(vnode('div', {attributes: {id: 'foo', class: 'bar'}})).outerHTML
+    ).toMatchSnapshot()
   })
 })
 

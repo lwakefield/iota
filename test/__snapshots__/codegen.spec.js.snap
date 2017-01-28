@@ -1,0 +1,106 @@
+exports[`Codegen codegenChildren generates children 1`] = `"[vnode(\'p\', {}, []), vnode(\'span\', {}, []), vnode(\'h1\', {}, [])]"`;
+
+exports[`Codegen codegenElement generates for an element with attributes and no children 1`] = `
+"vnode(\'div\', {
+    directives: {
+        id: attr(\'id\', \`foo\`),
+        class: attr(\'class\', \`class1 class2 \${class3}\`)
+    }
+}, [])"
+`;
+
+exports[`Codegen codegenElement generates for an element with children and attributes 1`] = `
+"vnode(\'div\', {
+    directives: {
+        id: attr(\'id\', \`foo\`),
+        class: attr(\'class\', \`class1 class2 \${class3}\`)
+    }
+}, [vnode(\'p\', {}, []), vnode(\'span\', {}, []), vnode(\'h1\', {}, [])])"
+`;
+
+exports[`Codegen codegenElement generates for an element with children and no attributes 1`] = `"vnode(\'div\', {}, [vnode(\'p\', {}, []), vnode(\'span\', {}, []), vnode(\'h1\', {}, [])])"`;
+
+exports[`Codegen codegenElement generates for an element with i-for 1`] = `
+"...loop(vals, (val, $index) => vnode(\'div\', {
+    key: $index
+}, []))"
+`;
+
+exports[`Codegen codegenElement generates for an element with i-for and i-if 1`] = `
+"...loop(vals, (val, $index) => toggle ? vnode(\'div\', {
+    key: $index
+}, []) : null)"
+`;
+
+exports[`Codegen codegenElement generates for an element with i-if 1`] = `"toggle ? vnode(\'div\', {}, []) : null"`;
+
+exports[`Codegen codegenElement generates for an element with no children and no attributes 1`] = `"vnode(\'div\', {}, [])"`;
+
+exports[`Codegen codegenOptions generates directives 1`] = `
+"{
+    directives: {
+        foo: {
+            name: \'foo\',
+            value: undefined,
+            constructor: Foo
+        }
+    }
+}"
+`;
+
+exports[`Codegen codegenOptions generates directives 2`] = `
+"{
+    directives: {
+        foo: {
+            name: \'foo\',
+            value: bar,
+            constructor: Foo
+        }
+    }
+}"
+`;
+
+exports[`Codegen codegenOptions generates events 1`] = `
+"{
+    directives: {
+        \'@input\': event(\'input\', $event => handleInput)
+    }
+}"
+`;
+
+exports[`Codegen codegenOptions generates events 2`] = `
+"{
+    directives: {
+        \'@input\': event(\'input\', $event => handleInput(id))
+    }
+}"
+`;
+
+exports[`Codegen codegenOptions generates events 3`] = `
+"{
+    directives: {
+        __formBinding: event(\'input\', $event => name = $event.target.value),
+        \'@input\': event(\'input\', $event => handleInput),
+        value: attr(\'value\', \`\${name}\`)
+    }
+}"
+`;
+
+exports[`Codegen codegenOptions generates multiple attributes 1`] = `
+"{
+    directives: {
+        id: attr(\'id\', \`foo\`),
+        class: attr(\'class\', \`class1 class2 \${class3}\`)
+    }
+}"
+`;
+
+exports[`Codegen codegenOptions generates props 1`] = `
+"{
+    props: {
+        foo: foobar
+    }
+}"
+`;
+
+exports[`Codegen codegenTextNode generates tnode 1`] = `"tnode(\`foo \${bar}\`)"`;

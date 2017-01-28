@@ -1,31 +1,23 @@
-/* eslint-env mocha */
-import {expect} from 'chai'
-import sinon from 'sinon'
-import jsdom from 'jsdom'
-
-import {assertHtmlIsEqual} from './util'
+/* eslint-env jest */
+import beautify from 'js-beautify'
 import {
   Event as EventDirective,
   Attribute,
 } from '../src/directives'
 
-beforeEach(() => {
-  const window = jsdom.jsdom().defaultView
-  const document = window.document
-  global['window'] = window
-  global['document'] = document
-  global['Event'] = window.Event
-})
+const assertCode = codeOrNode => expect(
+  beautify.html(typeof codeOrNode === 'string' ? codeOrNode : codeOrNode.outerHTML)
+).toMatchSnapshot()
 
 describe('Event', () => {
   it('binds, updates and unbinds correctly', () => {
     const event = new EventDirective()
     const el = document.createElement('button')
-    const [spy1, spy2] = [sinon.spy(), sinon.spy()]
-    event.bind(el, {name: 'click', value: spy1})
+    const [spy1, spy2] = [jest.fn(), jest.fn()]
 
+    event.bind(el, {name: 'click', value: spy1})
     el.dispatchEvent(new Event('click'))
-    expect(spy1.calledOnce).to.be.true
+    expect(spy1).toHaveBeenCalledTimes(1)
 
     event.update(
       el,
@@ -33,13 +25,13 @@ describe('Event', () => {
     )
 
     el.dispatchEvent(new Event('click'))
-    expect(spy2.calledOnce).to.be.true
-    expect(spy1.calledOnce).to.be.true
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
 
-    event.unbind(el, {name: 'click'})
+    event.unbind(el, {oldName: 'click'})
     el.dispatchEvent(new Event('click'))
-    expect(spy2.calledOnce).to.be.true
-    expect(spy1.calledOnce).to.be.true
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -49,25 +41,16 @@ describe('Attribute', () => {
     const el = document.createElement('div')
 
     attr.bind(el, {name: 'id', value: 'foo'})
-    assertHtmlIsEqual(
-      el,
-      `<div id="foo"></div>`
-    )
+    assertCode(el)
 
     attr.update(
       el,
       {name: 'id', value: 'bar'},
       {oldName: 'id', oldValue: 'foo'}
     )
-    assertHtmlIsEqual(
-      el,
-      `<div id="bar"></div>`
-    )
+    assertCode(el)
 
-    attr.unbind(el, {name: 'id'})
-    assertHtmlIsEqual(
-      el,
-      `<div></div>`
-    )
+    attr.unbind(el, {oldName: 'id'})
+    assertCode(el)
   })
 })

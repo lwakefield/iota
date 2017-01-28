@@ -1,0 +1,127 @@
+exports[`Patcher patch patches an element 1`] = `"<div></div>"`;
+
+exports[`Patcher patchChildren patching components persists components 1`] = `
+"<div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching components persists components 2`] = `
+"<div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching components persists components 3`] = `
+"<div>
+    <p></p>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching components persists keyed components 1`] = `
+"<div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching components persists keyed components 2`] = `
+"<div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching components persists keyed components 3`] = `
+"<div>
+    <div id=\"foo\"></div>
+    <div id=\"foo\"></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching keyed nodes patches keyed nodes for the first time 1`] = `
+"<div>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching keyed nodes patches keyed nodes with no changes 1`] = `
+"<div>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching keyed nodes patches keyed nodes with non-keyed insertion 1`] = `
+"<div>
+    <p></p>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren patching keyed nodes patches keyed nodes with shuffle 1`] = `
+"<div>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality adds children 1`] = `"<div></div>"`;
+
+exports[`Patcher patchChildren simple functionality adds children 2`] = `
+"<div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality patches type matching children 1`] = `
+"<div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality patches type matching children 2`] = `
+"<div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality removes children 1`] = `
+"<div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality removes children 2`] = `"<div></div>"`;
+
+exports[`Patcher patchChildren simple functionality replace children element node with text node 1`] = `
+"<div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality replace children element node with text node 2`] = `"<div>hello</div>"`;
+
+exports[`Patcher patchChildren simple functionality replace children with non-matching tagNames 1`] = `
+"<div>
+    <div></div>
+</div>"
+`;
+
+exports[`Patcher patchChildren simple functionality replace children with non-matching tagNames 2`] = `
+"<div>
+    <p></p>
+</div>"
+`;

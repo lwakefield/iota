@@ -2,7 +2,7 @@ import {ELEMENT_NODE, TEXT_NODE} from './constants'
 import {createElement, getTagName, shallowCloneNode} from './vdom'
 import {max, swap} from './util'
 import {components} from './component'
-import {insertAfter, replaceNode, removeNode, isFormEl, setAttribute} from './dom'
+import {insertAfter, replaceNode, removeNode, isFormEl} from './dom'
 
 const isComponent = node => (
   node &&
@@ -66,11 +66,14 @@ export default class Patcher {
     const directivesA = nodeA.options.directives || {}
     const directivesB = nodeB.options.directives || {}
 
-
     for (const key in directivesA) {
       if (!(key in directivesB)) {
         const dirA = directivesA[key]
-        dirA.instance.unbind(nodeA.el, dirA)
+        const oldVal = {
+          oldName: dirA.name,
+          oldValue: dirA.value
+        }
+        dirA.instance.unbind(nodeA.el, oldVal)
       }
     }
     for (const key in directivesB) {
@@ -82,8 +85,9 @@ export default class Patcher {
       if (!isBound) {
         directive.bind(nodeA.el, directivesB[key])
       } else {
-        const oldVal = {name: directivesA[key].name, value: directivesA}
-        directive.update(nodeA.el, directivesB[key], oldVal)
+        const oldVal = {oldName: directivesA[key].name, oldValue: directivesA[key].value}
+        const newVal = {name: key, value: directivesB[key].value}
+        directive.update(nodeA.el, newVal, oldVal)
       }
 
       directivesB[key].instance = directive
