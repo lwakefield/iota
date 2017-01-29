@@ -48,28 +48,20 @@ export default class Component {
     this._patcher.patch(rendered)
   }
 
-  static get registeredComponents() {
-    return this._cachedRegistedComponents || super.registeredComponents
-  }
+  static register(name, constructor) {
+    if (!this._registeredComponents) {
+      this._registeredComponents = {}
+    }
 
-  static set registeredComponents(val) {
-    this._registeredComponents = val
-    this._cachedRegistedComponents = Object.assign(
+    this._registeredComponents[name] = constructor
+    this.registeredComponents = Object.assign(
       {},
       super.registeredComponents,
       this._registeredComponents
     )
   }
 
-  static register(name, constructor) {
-    const {_registeredComponents = {}} = this
-    _registeredComponents[name] = constructor
-    this.registeredComponents = _registeredComponents
-  }
-
   static unregister(name) {
-    const {_registeredComponents = {}} = this
-    delete _registeredComponents[name]
-    this.registeredComponents = _registeredComponents
+    delete this._registeredComponents[name]
   }
 }

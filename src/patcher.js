@@ -32,17 +32,15 @@ export default class Patcher {
     }
 
     if (this.getComponentConstructor(nodeB)) {
-      nodeA.component = nodeA.component || this.newComponent(nodeB)
-      const component = nodeA.component
-
-      if (!component.$el) {
-        component.mount(nodeA.el)
-        nodeA.el = component.$el
-        this.patchDirectives(nodeA, nodeB)
+      if (!nodeA.component) {
+        nodeA.component = this.newComponent(nodeB)
+        nodeA.component.mount(nodeA.el)
+        nodeA.el = nodeA.component.$el
       } else {
-        component.setProps(nodeB.options.props || {})
-        this.patchDirectives(nodeA, nodeB)
+        nodeA.component.setProps(nodeB.options.props || {})
       }
+
+      this.patchDirectives(nodeA, nodeB)
     } else if (nodeA.nodeType === TEXT_NODE) {
       nodeA.el.textContent = nodeB.textContent
     } else if (nodeA.nodeType === ELEMENT_NODE) {
