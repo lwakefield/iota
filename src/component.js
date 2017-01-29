@@ -1,13 +1,16 @@
 import Patcher from './patcher'
 import {observe, proxy, objMap} from './util'
-import {vnode, tnode, createElement, shallowCloneNode} from './vdom'
+import {createElement, shallowCloneNode} from './vdom'
 import {replaceNode} from './dom'
-import {attr, event} from './directives'
 
 export const components = {}
 
-export function registerComponent(component) {
-  components[component.name] = component
+export function registerComponent() {
+  if (arguments.length === 1) {
+    components[arguments[0].name] = arguments[0]
+  } else if (arguments.length === 2) {
+    components[arguments[0]] = arguments[1]
+  }
 }
 export function unregisterComponent(name) {
   delete components[name]
@@ -15,14 +18,23 @@ export function unregisterComponent(name) {
 
 export class Component {
   constructor (options = {}) {
-    const {data = {}, methods = {}} = options
-    this.$data = observe(data, this.update.bind(this))
+    const {data = {}, methods = {}, props = {}} = options
+
+    this.$props = props instanceof Function ? props() : props
+    proxy(this, this.$props)
+
+    this.$data = observe(
+      data instanceof Function ? data.call(this) : data,
+      this.update.bind(this)
+    )
+    proxy(this, this.$data)
+
     this.$methods = objMap(methods, v => v.bind(this))
     this.$el = null
     this._patcher = null
-    this.$props = {}
 
-    proxy(this, this.$data)
+    // These are dangerous when you set new keys that are not on the proxied
+    // object
     proxy(this, this.$methods)
   }
   mount (el) {
@@ -35,7 +47,9 @@ export class Component {
     this.update(rendered)
   }
   setProps(props) {
-    this.$props = props
+    for (const key in props) {
+      this.$props[key] = props[key]
+    }
   }
   render () {
     throw new Error('Not implemented')

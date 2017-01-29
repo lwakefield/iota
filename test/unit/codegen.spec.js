@@ -7,6 +7,7 @@ import {
   codegenTextNode,
   codegenChildren,
   codegenElementNode,
+  sandbox,
 } from '../../src/codegen'
 import Directive, {
   registerDirective,
@@ -17,6 +18,11 @@ import {htoe} from './util'
 const assertCode = code => expect(beautify.js(code)).toMatchSnapshot()
 
 describe('Codegen', () => {
+  describe('sandbox', () => {
+    const fn = sandbox('[foo, bar, baz, qux]', {foo: 1, bar: 2, baz: 3})
+    expect(fn.toString()).toMatchSnapshot()
+    expect(fn.call({qux: 4})).toEqual([1, 2, 3, 4])
+  })
   describe('codegen', () => {
     it('generates a simple app', () => {
       const root = htoe(`

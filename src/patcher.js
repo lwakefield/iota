@@ -42,19 +42,18 @@ export default class Patcher {
     }
 
     if (isComponent(nodeB)) {
-      nodeA.component = nodeA.component || new (getComponent(nodeB))
+      nodeA.component = nodeA.component ||
+        new (getComponent(nodeB))({props: nodeB.options.props})
       const component = nodeA.component
-      component.setProps(nodeB.options.props || {})
 
       if (!component.$el) {
         component.mount(nodeA.el)
         nodeA.el = component.$el
         this.patchDirectives(nodeA, nodeB)
-        return
+      } else {
+        component.setProps(nodeB.options.props || {})
+        this.patchDirectives(nodeA, nodeB)
       }
-
-      component.update()
-      this.patchDirectives(nodeA, nodeB)
     } else if (nodeA.nodeType === TEXT_NODE) {
       nodeA.el.textContent = nodeB.textContent
     } else if (nodeA.nodeType === ELEMENT_NODE) {
