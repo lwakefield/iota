@@ -1,11 +1,7 @@
 /* eslint-env jest */
 import beautify from 'js-beautify'
 
-import {
-  Component,
-  registerComponent,
-  unregisterComponent,
-} from '../../src/component'
+import Component from '../../src/component'
 import Patcher, {Index} from '../../src/patcher'
 import {vnode, tnode} from '../../src/vdom'
 import {
@@ -45,12 +41,12 @@ describe('Patcher', () => {
     describe('patches a component', () => {
       class Foo extends Component {}
       beforeEach(() => {
-        registerComponent(Foo)
+        Component.register('Foo', Foo)
         stub(Foo.prototype, ['mount'])
         spy(Foo.prototype, ['setProps'])
       })
       afterEach(() => {
-        unregisterComponent(Foo)
+        Component.unregister('Foo')
         unstub(Foo.prototype, ['mount'])
         unspy(Foo.prototype, ['setProps'])
       })
@@ -72,9 +68,8 @@ describe('Patcher', () => {
         // Will replace the node on first patch
         expect(nodeA.el).not.toEqual(originalEl)
         expect(component.$el).toEqual(nodeA.el)
-
-        expect(nodeA.component.setProps).toHaveBeenCalledWith({foo: 'foobar'})
-        expect(nodeA.component.mount).toHaveBeenCalledWith(originalEl)
+        expect(component.$props).toEqual({foo: 'foobar'})
+        expect(component.mount).toHaveBeenCalledWith(originalEl)
       })
     })
   })
@@ -233,8 +228,8 @@ describe('Patcher', () => {
           return vnode('div', {attributes: {id: 'foo'}})
         }
       }
-      beforeEach(() => registerComponent(Foo))
-      afterEach(() => unregisterComponent(Foo))
+      beforeEach(() => Component.register('Foo', Foo))
+      afterEach(() => Component.unregister('Foo'))
 
       it('persists components', () => {
         const [nodeA, nodeB, patcher] = setup(

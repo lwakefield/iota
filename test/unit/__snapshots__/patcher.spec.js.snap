@@ -2,46 +2,46 @@ exports[`Patcher patch patches an element 1`] = `"<div></div>"`;
 
 exports[`Patcher patchChildren patching components persists components 1`] = `
 "<div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
 </div>"
 `;
 
 exports[`Patcher patchChildren patching components persists components 2`] = `
 "<div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
 </div>"
 `;
 
 exports[`Patcher patchChildren patching components persists components 3`] = `
 "<div>
     <p></p>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
 </div>"
 `;
 
 exports[`Patcher patchChildren patching components persists keyed components 1`] = `
 "<div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
 </div>"
 `;
 
 exports[`Patcher patchChildren patching components persists keyed components 2`] = `
 "<div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
 </div>"
 `;
 
 exports[`Patcher patchChildren patching components persists keyed components 3`] = `
 "<div>
-    <div id=\"foo\"></div>
-    <div id=\"foo\"></div>
+    <div id="foo"></div>
+    <div id="foo"></div>
 </div>"
 `;
 

@@ -1,24 +1,9 @@
 import {ELEMENT_NODE, TEXT_NODE} from './constants'
 import {createElement, getTagName, shallowCloneNode} from './vdom'
-import {max, swap} from './util'
-import {components} from './component'
-import {insertAfter, replaceNode, removeNode, isFormEl} from './dom'
+import {swap} from './util'
+import Component from './component'
+import {insertAfter, replaceNode, removeNode} from './dom'
 
-const isComponent = node => (
-  node &&
-  node.nodeType === ELEMENT_NODE &&
-  !!components[node.tagName]
-)
-const getComponent = node => components[node.tagName]
-const getFullKey = node => {
-  const hasKey = node && node.options && node.options.key !== undefined
-  if (!hasKey && isComponent(node)) {
-    return node.tagName
-  }
-  return hasKey ?
-    `${getTagName(node)}.${node.options.key}` :
-    null
-}
 const nodeTypesMatch = (nodeA, nodeB) => {
   return nodeA && nodeB &&
     nodeA.nodeType === nodeB.nodeType &&
@@ -27,8 +12,13 @@ const nodeTypesMatch = (nodeA, nodeB) => {
 
 export default class Patcher {
   // Patches nodeB onto nodeA
-  constructor (nodeA) {
+  constructor (nodeA, registeredComponents = {}) {
     this.nodeA = nodeA
+    this.registeredComponents = Object.assign(
+      {},
+      registeredComponents,
+      Component.registeredComponents
+    )
   }
   patch(nodeA, nodeB) {
     if (arguments.length === 1) {
@@ -41,9 +31,8 @@ export default class Patcher {
       throw new Error('expected nodes to have the same type')
     }
 
-    if (isComponent(nodeB)) {
-      nodeA.component = nodeA.component ||
-        new (getComponent(nodeB))({props: nodeB.options.props})
+    if (this.getComponentConstructor(nodeB)) {
+      nodeA.component = nodeA.component || this.newComponent(nodeB)
       const component = nodeA.component
 
       if (!component.$el) {
@@ -60,6 +49,16 @@ export default class Patcher {
       this.patchDirectives(nodeA, nodeB)
       this.patchChildren(nodeA, nodeB)
     }
+  }
+  newComponent (node) {
+    const constructor = this.getComponentConstructor(node)
+    const options = {props: node.options.props}
+    return new constructor(options)
+  }
+  getComponentConstructor (node) {
+    return node &&
+      node.nodeType === ELEMENT_NODE &&
+      this.registeredComponents[node.tagName] || null
   }
   patchDirectives(nodeA, nodeB) {
     const directivesA = nodeA.options.directives || {}
@@ -99,10 +98,10 @@ export default class Patcher {
     const childrenB = nodeB.children
 
     const indexed = new Index()
-    function index () {
+    const index = () => {
       for (let i = 0; i < childrenA.length; i++) {
         const child = childrenA[i]
-        const key = getFullKey(child)
+        const key = this.getFullKey(child)
         if (key) {
           indexed.queue(key, child)
         }
@@ -110,8 +109,8 @@ export default class Patcher {
     }
     index()
 
-    function reconcile (childA, childB) {
-      const [keyA, keyB] = [getFullKey(childA), getFullKey(childB)]
+    const reconcile = (childA, childB) => {
+      const [keyA, keyB] = [this.getFullKey(childA), this.getFullKey(childB)]
       const keyedChildA = indexed.dequeue(keyB)
       if (keyedChildA) {
         swap(childrenA, childA, keyedChildA)
@@ -167,6 +166,15 @@ export default class Patcher {
     }
 
     nodeA.children = newChildrenA
+  }
+  getFullKey (node) {
+    const hasKey = node && node.options && node.options.key !== undefined
+    if (!hasKey && this.getComponentConstructor(node)) {
+      return node.tagName
+    }
+    return hasKey ?
+      `${getTagName(node)}.${node.options.key}` :
+      null
   }
 }
 

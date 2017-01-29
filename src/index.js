@@ -1,9 +1,5 @@
 import {codegen} from './codegen'
-import {
-  Component,
-  registerComponent,
-  unregisterComponent
-} from './component'
+import Component from './component'
 import Directive, {
   registerDirective,
   unregisterDirective
@@ -14,6 +10,7 @@ import {ELEMENT_NODE} from './constants'
 //       that name...
 //
 // TODO: todos duplicate when double clicking then hitting esc
+// TODO: error handling on components that are broken
 
 class Vdoom {
   constructor (el, options = {}) {
@@ -40,8 +37,8 @@ class Vdoom {
     return DynamicComponent
   }
 }
-Vdoom.registerComponent = registerComponent
-Vdoom.unregisterComponent = unregisterComponent
+Vdoom.registerComponent = Component.register.bind(Component)
+Vdoom.unregisterComponent = Component.unregister.bind(Component)
 Vdoom.registerDirective = registerDirective
 Vdoom.unregisterDirective = unregisterDirective
 Vdoom.Directive = Directive

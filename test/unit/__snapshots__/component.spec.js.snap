@@ -1,0 +1,24 @@
+exports[`Component registers components 1`] = `
+Object {
+  "foo": [Function],
+}
+`;
+
+exports[`Component registers components 2`] = `
+Object {
+  "foo": [Function],
+}
+`;
+
+exports[`Component registers components 3`] = `
+Object {
+  "bar": [Function],
+  "foo": [Function],
+}
+`;
+
+exports[`Component registers components 4`] = `
+Object {
+  "foo": [Function],
+}
+`;
