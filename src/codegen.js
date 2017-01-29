@@ -15,18 +15,22 @@ export function codegen (node) {
   const code = codegenNode(node)
   return sandbox(
     code,
-    Object.assign({}, {tnode, vnode, attr, event, loop}, globalDirectives),
-    this
+    Object.assign({}, {tnode, vnode, attr, event, loop}, globalDirectives)
   )
 }
 
-export function sandbox(code, globals, scope) {
+export function sandbox(code, globals) {
   const keys = Object.keys(globals)
   const values = keys.map(k => globals[k])
-  return new Function(
-    ...keys,
-    `with (this) return ${code}`
-  ).bind(scope, ...values)
+  const sandbox = new Function(
+    ...keys, '_scope',
+    `with (_scope) return ${code}`
+  ).bind(null, ...values)
+
+
+  return function sandboxed () {
+    return sandbox(this)
+  }
 }
 
 function loop (arr, fn) {
