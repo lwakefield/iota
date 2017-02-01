@@ -19,17 +19,17 @@ export function codegen (node) {
   )
 }
 
+// TODO: move this to util
 export function sandbox(code, globals) {
   const keys = Object.keys(globals)
   const values = keys.map(k => globals[k])
   const sandbox = new Function(
-    ...keys, '_scope',
-    `with (_scope) return ${code}`
-  ).bind(null, ...values)
-
+    ...keys,
+    `with (this) return ${code}`
+  )
 
   return function sandboxed () {
-    return sandbox(this)
+    return sandbox.call(this, ...values)
   }
 }
 
@@ -113,7 +113,10 @@ export function codegenOptions (node) {
     } else if (name[0] === '@') {
       addDirective(
         `'${name}'`,
-        `event('${name.substr(1)}', $event => ${value})`
+        `event('${name.substr(1)}', $event => {
+          const res = ${value}
+          return res instanceof Function ? res.call(this, $event) : res
+        })`
       )
     } else if (globalDirectives[name]) {
       const directiveConstructor = globalDirectives[name].name

@@ -57,10 +57,7 @@ export class Event extends Directive {
   bind (el, {name, value}) {
     this.handler = value
     this.listener = $event => {
-      const result = this.handler($event)
-      if (result instanceof Function) {
-        result($event)
-      }
+      this.handler($event)
     }
     el.addEventListener(name, this.listener)
   }

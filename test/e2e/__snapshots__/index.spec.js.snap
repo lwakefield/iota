@@ -1,24 +1,24 @@
 exports[`simple todo app functions correctly 1`] = `
 "<body>
-    <div id="app">
+    <div id=\"app\">
       <form>
-        <input type="text" value="">
-        <button name="new-todo">Add</button>
+        <input type=\"text\" value=\"\">
+        <button name=\"new-todo\">Add</button>
       </form>
       
     </div>
 
-    <template id="new-todo">
+    <template id=\"new-todo\">
       <form>
-        <input type="text" value="\${todo}">
-        <button @click="add" name="new-todo">Add</button>
+        <input type=\"text\" value=\"\${todo}\">
+        <button @click=\"add\" name=\"new-todo\">Add</button>
       </form>
     </template>
 
-    <template id="todo">
+    <template id=\"todo\">
       <div>
         \${id} - \${todo}
-        <button @click="remove" name="remove-todo"></button>
+        <button @click=\"remove\" name=\"remove-todo\"></button>
       </div>
     </template>
   </body>"
@@ -26,28 +26,28 @@ exports[`simple todo app functions correctly 1`] = `
 
 exports[`simple todo app functions correctly 2`] = `
 "<body>
-    <div id="app">
+    <div id=\"app\">
       <form>
-        <input type="text" value="">
-        <button name="new-todo">Add</button>
+        <input type=\"text\" value=\"\">
+        <button name=\"new-todo\">Add</button>
       </form>
       <div>
         0 - foo
-        <button name="remove-todo"></button>
+        <button name=\"remove-todo\"></button>
       </div>
     </div>
 
-    <template id="new-todo">
+    <template id=\"new-todo\">
       <form>
-        <input type="text" value="\${todo}">
-        <button @click="add" name="new-todo">Add</button>
+        <input type=\"text\" value=\"\${todo}\">
+        <button @click=\"add\" name=\"new-todo\">Add</button>
       </form>
     </template>
 
-    <template id="todo">
+    <template id=\"todo\">
       <div>
         \${id} - \${todo}
-        <button @click="remove" name="remove-todo"></button>
+        <button @click=\"remove\" name=\"remove-todo\"></button>
       </div>
     </template>
   </body>"
@@ -55,31 +55,31 @@ exports[`simple todo app functions correctly 2`] = `
 
 exports[`simple todo app functions correctly 3`] = `
 "<body>
-    <div id="app">
+    <div id=\"app\">
       <form>
-        <input type="text" value="">
-        <button name="new-todo">Add</button>
+        <input type=\"text\" value=\"\">
+        <button name=\"new-todo\">Add</button>
       </form>
       <div>
         0 - foo
-        <button name="remove-todo"></button>
+        <button name=\"remove-todo\"></button>
       </div><div>
         1 - bar
-        <button name="remove-todo"></button>
+        <button name=\"remove-todo\"></button>
       </div>
     </div>
 
-    <template id="new-todo">
+    <template id=\"new-todo\">
       <form>
-        <input type="text" value="\${todo}">
-        <button @click="add" name="new-todo">Add</button>
+        <input type=\"text\" value=\"\${todo}\">
+        <button @click=\"add\" name=\"new-todo\">Add</button>
       </form>
     </template>
 
-    <template id="todo">
+    <template id=\"todo\">
       <div>
         \${id} - \${todo}
-        <button @click="remove" name="remove-todo"></button>
+        <button @click=\"remove\" name=\"remove-todo\"></button>
       </div>
     </template>
   </body>"

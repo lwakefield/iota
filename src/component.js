@@ -2,6 +2,8 @@ import Patcher from './patcher'
 import {observe, proxy, objMap} from './util'
 import {createElement, shallowCloneNode} from './vdom'
 import {replaceNode} from './dom'
+import {codegen} from './codegen'
+import {ELEMENT_NODE} from './constants'
 
 export default class Component {
   constructor (options = {}) {
@@ -10,11 +12,7 @@ export default class Component {
     this.$props = props instanceof Function ? props() : props
     proxy(this, this.$props)
 
-    this.$data = observe(
-      data instanceof Function ? data.call(this) : data,
-      this.update.bind(this)
-    )
-    proxy(this, this.$data)
+    this.$data = data
 
     this.$methods = objMap(methods, v => v.bind(this))
     this.$el = null
@@ -23,6 +21,16 @@ export default class Component {
     // These are dangerous when you set new keys that are not on the proxied
     // object
     proxy(this, this.$methods)
+  }
+  get $data () {
+    return this._$data
+  }
+  set $data (obj) {
+    this._$data = observe(
+      obj instanceof Function ? obj.call(this) : obj,
+      this.update.bind(this)
+    )
+    proxy(this, this._$data)
   }
   mount (el) {
     const rendered = this.render.call(this)
@@ -44,8 +52,18 @@ export default class Component {
   render () {
     throw new Error('Not implemented')
   }
-  update (rendered = this.render()) {
+  update (rendered = this.render.call(this)) {
     this._patcher.patch(rendered)
+  }
+
+  static set $template (el) {
+    // TODO: move this function somewhere else?
+    const root = el.tagName.toLowerCase() === 'template' ?
+      Array.from(el.content.childNodes)
+        .find(v => v.nodeType === ELEMENT_NODE)
+        .cloneNode(true) :
+      el.cloneNode(true)
+    this.prototype.render = codegen(root)
   }
 
   static register(name, constructor) {

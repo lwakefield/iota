@@ -2,6 +2,7 @@
   "presets": [
     ["es2015", {"loose": true}]
   ],
+  "plugins": ["transform-class-properties"],
   "env": {
     "test": {
       "plugins": ["istanbul"]

@@ -63,7 +63,10 @@ exports[`Codegen codegenOptions generates directives 2`] = `
 exports[`Codegen codegenOptions generates events 1`] = `
 "{
     directives: {
-        \'@input\': event(\'input\', $event => handleInput)
+        \'@input\': event(\'input\', $event => {
+            const res = handleInput
+            return res instanceof Function ? res.call(this, $event) : res
+        })
     }
 }"
 `;
@@ -71,7 +74,10 @@ exports[`Codegen codegenOptions generates events 1`] = `
 exports[`Codegen codegenOptions generates events 2`] = `
 "{
     directives: {
-        \'@input\': event(\'input\', $event => handleInput(id))
+        \'@input\': event(\'input\', $event => {
+            const res = handleInput(id)
+            return res instanceof Function ? res.call(this, $event) : res
+        })
     }
 }"
 `;
@@ -80,7 +86,10 @@ exports[`Codegen codegenOptions generates events 3`] = `
 "{
     directives: {
         __formBinding: event(\'input\', $event => name = $event.target.value),
-        \'@input\': event(\'input\', $event => handleInput),
+        \'@input\': event(\'input\', $event => {
+            const res = handleInput
+            return res instanceof Function ? res.call(this, $event) : res
+        }),
         value: attr(\'value\', \`\${name}\`)
     }
 }"
@@ -105,4 +114,4 @@ exports[`Codegen codegenOptions generates props 1`] = `
 
 exports[`Codegen codegenTextNode generates tnode 1`] = `"tnode(\`foo \${bar}\`)"`;
 
-exports[`undefined 1`] = `"function sandboxed() {/* istanbul ignore next */++cov_qu0s95ps3.f[3];++cov_qu0s95ps3.s[7];return sandbox(this);}"`;
+exports[`undefined 1`] = `"function sandboxed() {/* istanbul ignore next */++cov_qu0s95ps3.f[3];++cov_qu0s95ps3.s[7];return (/* istanbul ignore next */sandbox.call. /* istanbul ignore next */apply(sandbox, /* istanbul ignore next */[this].concat(values)));}"`;

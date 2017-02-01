@@ -25,59 +25,51 @@ describe('simple todo app', () => {
 
   const todos = []
 
-  const newTodo = Vdoom.component(
-    document.querySelector('#new-todo'),
-    {
-      data: () => ({todo: '', todos}),
-      methods: {
-        add() {
-          this.todos.push(this.todo)
-          this.todo = ''
-        }
-      }
-    }
-  )
-  Vdoom.registerComponent('new-todo', newTodo)
+  class NewTodo extends Vdoom.Component {
+    static $template = document.querySelector('#new-todo')
+    $data = {todo: '', todos}
 
-  const todo = Vdoom.component(
-    document.querySelector('#todo'),
-    {
-      data() {
-        return {todo: todos[this.id], todos}
-      },
-      methods: {
-        remove() {
-          this.todos.splice(this.id, 1)
-        }
-      }
+    add () {
+      this.todos.push(this.todo)
+      this.todo = ''
     }
-  )
-  Vdoom.registerComponent('todo', todo)
+  }
+  Vdoom.registerComponent('new-todo', NewTodo)
 
-  const app = new Vdoom(
-    document.querySelector('#app'),
-    {
-      data: () => ({todos})
+  class Todo extends Vdoom.Component {
+    static $template = document.querySelector('#todo')
+    $data = {todo: todos[this.id], todos}
+
+    remove () {
+      this.todos.splice(this.id, 1)
     }
-  )
+  }
+  Vdoom.registerComponent('todo', Todo)
+
+  class App extends Vdoom.Component {
+    static $template = document.querySelector('#app')
+    $data = {todos}
+  }
+  const app = new App
+  app.mount(document.querySelector('#app'))
 
   it('functions correctly', () => {
     expect(document.body.outerHTML).toMatchSnapshot()
 
     document.querySelector('input').value = 'foo'
     document.querySelector('input').dispatchEvent(new Event('input'))
-    document.querySelector('button[name="new-todo"]').dispatchEvent(new Event('click'))
-
+    document.querySelector('button[name="new-todo"]')
+      .dispatchEvent(new Event('click'))
     expect(document.body.outerHTML).toMatchSnapshot()
 
     document.querySelector('input').value = 'bar'
     document.querySelector('input').dispatchEvent(new Event('input'))
-    document.querySelector('button[name="new-todo"]').dispatchEvent(new Event('click'))
-
+    document.querySelector('button[name="new-todo"]')
+      .dispatchEvent(new Event('click'))
     expect(document.body.outerHTML).toMatchSnapshot()
 
-    document.querySelector('button[name="remove-todo"]').dispatchEvent(new Event('click'))
-
+    document.querySelector('button[name="remove-todo"]')
+      .dispatchEvent(new Event('click'))
     expect(document.body.outerHTML).toMatchSnapshot()
   })
 })
