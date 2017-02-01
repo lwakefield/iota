@@ -33,7 +33,16 @@
   <link rel="stylesheet" href="./dbmon.css" type="text/css">
 
   <script type="text/javascript" charset="utf-8">
-    const app = new Vdoom(document.querySelector('#app'), {data: {databases: []}})
+    class App extends Vdoom.Component {
+      constructor () {
+        super()
+        this.$data = {databases: []}
+      }
+    }
+    App.$template = document.querySelector('#app')
+
+    const app = new App
+    app.mount(document.querySelector('#app'))
 
     function loadsamples () {
         app.databases = ENV.generateData(true).toArray();

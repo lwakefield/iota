@@ -1,37 +1,44 @@
 import Patcher from './patcher'
-import {observe, proxy, objMap} from './util'
+import {observe, proxy} from './util'
 import {createElement, shallowCloneNode} from './vdom'
 import {replaceNode} from './dom'
 import {codegen} from './codegen'
 import {ELEMENT_NODE} from './constants'
 
 export default class Component {
-  constructor (options = {}) {
-    const {data = {}, methods = {}, props = {}} = options
+  $el = null
+  _patcher = null
 
-    this.$props = props instanceof Function ? props() : props
-    proxy(this, this.$props)
+  constructor (options = {}) {
+    const {data = {}, props = {}} = options
 
     this.$data = data
+    this.$props = props
+  }
 
-    this.$methods = objMap(methods, v => v.bind(this))
-    this.$el = null
-    this._patcher = null
-
-    // These are dangerous when you set new keys that are not on the proxied
-    // object
-    proxy(this, this.$methods)
+  set $data (obj) {
+    this._$data = this._observeAndProxy(obj)
   }
   get $data () {
     return this._$data
   }
-  set $data (obj) {
-    this._$data = observe(
+
+  set $props (obj) {
+    this._$props = this._observeAndProxy(obj)
+  }
+  get $props () {
+    return this._$props
+  }
+
+  _observeAndProxy(obj) {
+    const observed = observe(
       obj instanceof Function ? obj.call(this) : obj,
       this.update.bind(this)
     )
-    proxy(this, this._$data)
+    proxy(this, observed)
+    return observed
   }
+
   mount (el) {
     const rendered = this.render.call(this)
     rendered.el = createElement(rendered)
@@ -44,14 +51,17 @@ export default class Component {
     )
     this.update(rendered)
   }
+
   setProps(props) {
     for (const key in props) {
       this.$props[key] = props[key]
     }
   }
+
   render () {
     throw new Error('Not implemented')
   }
+
   update (rendered = this.render.call(this)) {
     this._patcher.patch(rendered)
   }
