@@ -23,8 +23,8 @@
     "webpack": "^2.2.0-rc.3"
   },
   "scripts": {
-    "test": "mocha",
-    "cover": "NODE_ENV=test BABEL_ENV=test nyc --reporter=lcov mocha",
+    "test": "jest test/**/*.js",
+    "cover": "jest -- coverage test/**/*.js",
     "build-lib": "webpack src/index.js dist/vdoom.js --module-bind 'js=babel-loader' --output-library Vdoom"
   },
   "author": "Lawrence Wakefield <lawrence@iamlawrence.me> (https://iamlawrence.me/)",
