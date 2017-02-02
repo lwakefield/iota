@@ -113,5 +113,3 @@ exports[`Codegen codegenOptions generates props 1`] = `
 `;
 
 exports[`Codegen codegenTextNode generates tnode 1`] = `"tnode(\`foo \${bar}\`)"`;
-
-exports[`undefined 1`] = `"function sandboxed() {/* istanbul ignore next */++cov_qu0s95ps3.f[3];++cov_qu0s95ps3.s[7];return (/* istanbul ignore next */sandbox.call. /* istanbul ignore next */apply(sandbox, /* istanbul ignore next */[this].concat(values)));}"`;
