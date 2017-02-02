@@ -24,7 +24,7 @@
   },
   "scripts": {
     "test": "jest test/**/*.js",
-    "cover": "jest -- coverage test/**/*.js",
+    "cover": "jest --coverage test/**/*.js",
     "build-lib": "webpack src/index.js dist/vdoom.js --module-bind 'js=babel-loader' --output-library Vdoom"
   },
   "author": "Lawrence Wakefield <lawrence@iamlawrence.me> (https://iamlawrence.me/)",
