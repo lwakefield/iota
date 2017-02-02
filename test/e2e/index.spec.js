@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import Vdoom from '../../src'
+import Iota from '../../src'
 
 describe('simple todo app', () => {
   document.body.innerHTML = `
@@ -25,7 +25,7 @@ describe('simple todo app', () => {
 
   const todos = []
 
-  class NewTodo extends Vdoom.Component {
+  class NewTodo extends Iota.Component {
     static $template = document.querySelector('#new-todo')
     $data = {todo: '', todos}
 
@@ -34,9 +34,9 @@ describe('simple todo app', () => {
       this.todo = ''
     }
   }
-  Vdoom.registerComponent('new-todo', NewTodo)
+  Iota.registerComponent('new-todo', NewTodo)
 
-  class Todo extends Vdoom.Component {
+  class Todo extends Iota.Component {
     static $template = document.querySelector('#todo')
     $data = {todo: todos[this.id], todos}
 
@@ -44,9 +44,9 @@ describe('simple todo app', () => {
       this.todos.splice(this.id, 1)
     }
   }
-  Vdoom.registerComponent('todo', Todo)
+  Iota.registerComponent('todo', Todo)
 
-  class App extends Vdoom.Component {
+  class App extends Iota.Component {
     static $template = document.querySelector('#app')
     $data = {todos}
   }

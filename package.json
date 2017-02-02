@@ -1,5 +1,5 @@
 {
-  "name": "vdoom",
+  "name": "iota",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -25,7 +25,7 @@
   "scripts": {
     "test": "jest test/**/*.js",
     "cover": "jest --coverage test/**/*.js",
-    "build-lib": "webpack src/index.js dist/vdoom.js --module-bind 'js=babel-loader' --output-library Vdoom"
+    "build-lib": "webpack src/index.js dist/iota.js --module-bind 'js=babel-loader' --output-library Iota"
   },
   "author": "Lawrence Wakefield <lawrence@iamlawrence.me> (https://iamlawrence.me/)",
   "license": "ISC"

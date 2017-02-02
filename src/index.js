@@ -9,6 +9,7 @@ import Directive, {
 //
 // TODO: todos duplicate when double clicking then hitting esc
 // TODO: error handling on components that are broken
+// TODO: handle events
 
 module.exports = {
   registerComponent: Component.register.bind(Component),
