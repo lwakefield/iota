@@ -1,6 +1,4 @@
 /* eslint-env jest */
-import {expect} from 'chai'
-
 import {ELEMENT_NODE, TEXT_NODE} from '../../src/constants'
 import {arrToObj} from '../../src/util'
 import {vnode, tnode} from '../../src/vdom'
@@ -10,17 +8,6 @@ export const normalize = s => s.split('\n')
   .map(v => v.trim())
   .filter(v => !!v)
   .join('')
-
-export function assertCodeIsEqual(codeA, codeB) {
-  expect(normalize(codeA)).to.eql(normalize(codeB))
-}
-
-export function assertHtmlIsEqual(nodeA, nodeB) {
-  assertCodeIsEqual(
-    typeof nodeA === 'string' ? nodeA.trim() : nodeA.outerHTML,
-    typeof nodeB === 'string' ? nodeB.trim() : nodeB.outerHTML
-  )
-}
 
 export function htoe(html) {
   const wrapper = document.createElement('div')
@@ -89,16 +76,4 @@ export function mock(obj, key, fn) {
 export function unmock(obj, key) {
   obj[key] = obj[`_${key}`]
   delete obj[`_${key}`]
-}
-
-export const mockOnClass = (cls, prop, mock) => {
-  // have we already mocked it?
-  if (!cls.prototype[`_${prop}`]) {
-    cls.prototype[`_${prop}`] = cls.prototype[prop]
-  }
-  cls.prototype[prop] = mock
-}
-export const unmockOnClass = (cls, prop) => {
-  cls.prototype[prop] = cls.prototype[`_${prop}`]
-  cls.prototype[`_${prop}`] = undefined
 }
