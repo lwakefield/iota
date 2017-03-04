@@ -1,22 +1,43 @@
-export function observe (obj, fn) {
+export function observe (obj, listeners) {
   if (!obj) return obj
-  if (obj.__observer__) return obj.__observer__
+  if (!Array.isArray(listeners)) listeners = [listeners]
+
+  // This can happen with the recursive observation *or* it can happen when we
+  // try to observe an object which already has an observer
+  if (obj.__observer__) {
+    obj.__addListeners__(listeners)
+    return obj.__observer__
+  }
 
   const proxy = new Proxy(obj, {
-    set (target, property, val) {
-      target[property] = val
-      fn()
+    set (target, property, value) {
+      target[property] = value
+      for (const listener of proxy.__listeners__) listener()
       return true
     },
     get (target, property) {
       const result = target[property]
-      return typeof result === 'object' && property !== '__observer__' ?
-        observe(result, fn) :
-        result
+      if (typeof result !== 'object') return result
+      if (property === '__observer__') return result
+      if (property === '__listeners__') return result
+      if (property === '__addListeners__') return result
+
+      // If result has been observed from somewhere else, then we might need to
+      // add our listeners...
+      return observe(result, Array.from(proxy.__listeners__))
     }
   })
 
   Object.defineProperty(proxy, '__observer__', {value: proxy})
+  Object.defineProperty(proxy, '__listeners__', {value: new Set(listeners)})
+  Object.defineProperty(proxy, '__addListeners__', {
+    value: function (toAdd) {
+      for (const listener of toAdd) {
+        this.__listeners__.add(listener)
+      }
+    }
+  })
+
   return proxy
 }
 
