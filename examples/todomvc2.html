@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+    <script src="../dist/iota.js"></script>
+  </head>
+  <body>
+    <template id="todo">
+      <div>
+        <input type="checkbox" checked="${todo.completed}">
+        <label>${todo.title}</label>
+        <input type="text" value="${todo.title}">
+        <button @click="remove">&times;</button>
+      </div>
+    </template>
+    <script>
+      class Todo extends Iota.Component {
+        constructor ({props}) {
+          super(...arguments)
+          this.$data = {todos}
+        }
+        get todo () {
+          return this.todos[this.id] || {}
+        }
+        remove () {
+          this.todos.splice(this.id, 1)
+        }
+      }
+      Todo.$template = document.querySelector('#todo')
+    </script>
+
+    <template id="todo-list">
+      <ul>
+        <li i-for="t of todos">
+          <todo :id="$index"></todo>
+        </li>
+      </ul>
+    </template>
+    <script>
+      class TodoList extends Iota.Component {
+        constructor () {
+          super(...arguments)
+          this.$data = {todos}
+        }
+      }
+      TodoList.$template = document.querySelector('#todo-list')
+      // TodoList.prototype.$data = {todos}
+      TodoList.register('todo', Todo)
+    </script>
+
+    <template id="todo-form">
+      <div>
+        <input type="text" value="${todo}" @keyup="handle">
+      </div>
+    </template>
+    <script>
+      class TodoForm extends Iota.Component {
+        constructor () {
+          super(...arguments)
+          this.$data = {todos, todo: ''}
+        }
+        handle (event) {
+          if (event.key === 'Enter') {
+            this.todos.push({
+              title: this.todo,
+              completed: false
+            })
+            this.todo = ''
+          }
+        }
+      }
+      TodoForm.$template = document.querySelector('#todo-form')
+    </script>
+
+    <div id="app">
+      <h1>todo list</h1>
+      <todo-form></todo-form>
+      <todo-list></todo-list>
+    </div>
+    <script>
+      const todos = [
+        {title: 'foo', completed: true},
+        {title: 'bar', completed: true},
+        {title: 'baz', completed: true},
+        {title: 'qux', completed: true},
+      ]
+
+      class App extends Iota.Component {
+        constructor () {
+          super(...arguments)
+          this.$data = {todos}
+        }
+      }
+      App.$template = document.querySelector('#app')
+      App.register('todo-list', TodoList)
+      App.register('todo-form', TodoForm)
+
+      const app = new App
+      app.mount(document.querySelector('#app'))
+//      const app = new Iota(document.querySelector('#app'), {
+//      <todo :todo="todo"></todo>
+//        data: {
+//          todos: loadTodos(),
+//          editingTodo: null,
+//          newTodo: '',
+//          visibility: 'all',
+//        },
+//        methods: {
+//          toggleAll () {
+//            if (this.active().length) {
+//              this.todos.forEach(v => {
+//                v.completed = true
+//              })
+//            } else {
+//              this.todos.forEach(v => {
+//                v.completed = false
+//              })
+//            }
+//          },
+//          handleInput ($event) {
+//            if ($event.key === 'Enter') {
+//              this.todos.push({title: this.newTodo, completed: false})
+//              this.newTodo = ''
+//              updateTodos(this.todos)
+//            }
+//          },
+//          handleEditInput ($event) {
+//            if ($event.key === 'Enter') {
+//              this.editingTodo = null
+//              updateTodos(this.todos)
+//            } else if ($event.key === 'Escape') {
+//              this.editingTodo = null
+//            }
+//          },
+//          remove (todo) {
+//            removeFromArray(this.todos, todo)
+//            updateTodos(this.todos)
+//          },
+//          edit (todo) {
+//            this.editingTodo = todo
+//          },
+//          updateTodos () {
+//            updateTodos(this.todos)
+//          },
+//          filtered () {
+//            return this[this.visibility]()
+//          },
+//          all () {
+//            return this.todos
+//          },
+//          active () {
+//            return this.todos.filter(v => !v.completed)
+//          },
+//          completed () {
+//            return this.todos.filter(v => v.completed)
+//          },
+//          remaining () {
+//            return this.active().length
+//          },
+//        }
+//      })
+    </script>
+
+  </body>
+</html>

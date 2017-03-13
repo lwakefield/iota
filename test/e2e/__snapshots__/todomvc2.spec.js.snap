@@ -1,0 +1,211 @@
+exports[`test todomvc2 1`] = `
+"<body>
+    <template id=\"todo\">
+      <div class=\"todo\">
+        <input type=\"checkbox\" checked=\"\${todo.completed}\">
+        <label>\${todo.title}</label>
+        <input type=\"text\" value=\"\${todo.title}\">
+        <button @click=\"remove\">×</button>
+      </div>
+    </template>
+
+    <template id=\"todo-list\">
+      <ul>
+        <li i-for=\"t of todos\">
+          <todo :id=\"$index\"></todo>
+        </li>
+      </ul>
+    </template>
+
+    <template id=\"todo-form\">
+      <div class=\"todo-form\">
+        <input type=\"text\" value=\"\${todo}\" @keyup=\"handle\">
+      </div>
+    </template>
+
+    <div id=\"app\">
+        <h1>todo list</h1>
+        <div class=\"todo-form\">
+            <input type=\"text\" value=\"\">
+        </div>
+        <ul>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>foo</label>
+                    <input type=\"text\" value=\"foo\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>bar</label>
+                    <input type=\"text\" value=\"bar\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>baz</label>
+                    <input type=\"text\" value=\"baz\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>qux</label>
+                    <input type=\"text\" value=\"qux\">
+                    <button>×</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>"
+`;
+
+exports[`test todomvc2 2`] = `
+"<body>
+    <template id=\"todo\">
+      <div class=\"todo\">
+        <input type=\"checkbox\" checked=\"\${todo.completed}\">
+        <label>\${todo.title}</label>
+        <input type=\"text\" value=\"\${todo.title}\">
+        <button @click=\"remove\">×</button>
+      </div>
+    </template>
+
+    <template id=\"todo-list\">
+      <ul>
+        <li i-for=\"t of todos\">
+          <todo :id=\"$index\"></todo>
+        </li>
+      </ul>
+    </template>
+
+    <template id=\"todo-form\">
+      <div class=\"todo-form\">
+        <input type=\"text\" value=\"\${todo}\" @keyup=\"handle\">
+      </div>
+    </template>
+
+    <div id=\"app\">
+        <h1>todo list</h1>
+        <div class=\"todo-form\">
+            <input type=\"text\" value=\"\">
+        </div>
+        <ul>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>foo</label>
+                    <input type=\"text\" value=\"foo\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>bar</label>
+                    <input type=\"text\" value=\"bar\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>baz</label>
+                    <input type=\"text\" value=\"baz\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>qux</label>
+                    <input type=\"text\" value=\"qux\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\">
+                    <label>new todo</label>
+                    <input type=\"text\" value=\"new todo\">
+                    <button>×</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>"
+`;
+
+exports[`test todomvc2 3`] = `
+"<body>
+    <template id=\"todo\">
+      <div class=\"todo\">
+        <input type=\"checkbox\" checked=\"\${todo.completed}\">
+        <label>\${todo.title}</label>
+        <input type=\"text\" value=\"\${todo.title}\">
+        <button @click=\"remove\">×</button>
+      </div>
+    </template>
+
+    <template id=\"todo-list\">
+      <ul>
+        <li i-for=\"t of todos\">
+          <todo :id=\"$index\"></todo>
+        </li>
+      </ul>
+    </template>
+
+    <template id=\"todo-form\">
+      <div class=\"todo-form\">
+        <input type=\"text\" value=\"\${todo}\" @keyup=\"handle\">
+      </div>
+    </template>
+
+    <div id=\"app\">
+        <h1>todo list</h1>
+        <div class=\"todo-form\">
+            <input type=\"text\" value=\"\">
+        </div>
+        <ul>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>bar</label>
+                    <input type=\"text\" value=\"bar\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>baz</label>
+                    <input type=\"text\" value=\"baz\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\" checked=\"true\">
+                    <label>qux</label>
+                    <input type=\"text\" value=\"qux\">
+                    <button>×</button>
+                </div>
+            </li>
+            <li>
+                <div class=\"todo\">
+                    <input type=\"checkbox\">
+                    <label>new todo</label>
+                    <input type=\"text\" value=\"new todo\">
+                    <button>×</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>"
+`;
